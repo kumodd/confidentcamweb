@@ -39,8 +39,24 @@
             </nav>
             
             <div class="nav-actions">
-                <a href="login.html" class="btn btn-outline" style="margin-right: 12px;">Web Login</a>
-                <button class="btn btn-primary coming-soon-btn">Download App</button>
+                <a href="login.html" class="btn btn-outline web-login-btn" style="margin-right: 12px;">Web Login</a>
+                <button class="btn btn-primary coming-soon-btn nav-download-btn">Download App</button>
+                <div class="mobile-menu-toggle" id="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu Overlay -->
+            <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+                <nav class="mobile-nav-links">
+                    <a href="#features" class="mobile-nav-link">Features</a>
+                    <a href="#how-it-works" class="mobile-nav-link">Web Portal</a>
+                    <a href="#testimonials" class="mobile-nav-link">Reviews</a>
+                    <a href="login.html" class="btn btn-outline" style="width: 100%; margin-top: 16px;">Web Login</a>
+                    <button class="btn btn-primary coming-soon-btn" style="width: 100%; margin-top: 12px;">Download App</button>
+                </nav>
             </div>
         </div>
     </header>
@@ -62,7 +78,7 @@
                     Stop letting camera shyness hold back your business. Confident Creator combines daily guided challenges, AI-generated viral scripts, and a professional teleprompter to transform how you speak on video.
                 </p>
                 
-                <div class="hero-actions" style="margin-bottom: 24px;">
+                <div class="action-buttons-group" style="margin-bottom: 24px;">
                     <button class="btn btn-primary coming-soon-btn" style="height: 56px; padding: 0 32px; font-size: 18px;">
                         <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 13.5l-4.5 4.5V4h-2v14l-4.5-4.5-1.5 1.5 7 7 7-7-1.5-1.5z"/></svg>
                         Download for iOS
@@ -273,7 +289,7 @@
                 <div class="cta-content">
                     <h2>Ready to press record?</h2>
                     <p>Join thousands of creators who have overcome their camera anxiety and built massive audiences using Confident Creator.</p>
-                    <div style="display: flex; gap: 16px; justify-content: center;">
+                    <div class="action-buttons-group cta-buttons-group">
                         <button class="btn coming-soon-btn" style="background: white; color: var(--brand-primary); height: 56px; padding: 0 32px;">Download for iOS</button>
                         <button class="btn btn-outline coming-soon-btn" style="height: 56px; padding: 0 32px; border-color: rgba(255,255,255,0.4);">Download for Android</button>
                     </div>
@@ -344,6 +360,25 @@
                 if (e.target === modal) {
                     modal.classList.remove('show');
                 }
+            });
+
+            // Mobile Menu Logic
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            mobileMenuToggle.addEventListener('click', () => {
+                mobileMenuToggle.classList.toggle('active');
+                mobileMenuOverlay.classList.toggle('active');
+                document.body.classList.toggle('no-scroll');
+            });
+
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenuToggle.classList.remove('active');
+                    mobileMenuOverlay.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                });
             });
 
             // Scroll Animation Observer
