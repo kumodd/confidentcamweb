@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generator | Confident Creator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/generator.css">
+</head>
+
+<body>
+    <div class="page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
+                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
+                    <defs>
+                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
+                            <stop stop-color="#EC4899" />
+                            <stop offset="1" stop-color="#8B5CF6" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Confident Creator</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="scripts.html" class="nav-link">My Scripts</a></li>
+                <li><a href="generator.html" class="nav-link active">AI Generator</a></li>
+                <li><a href="teleprompter.html" class="nav-link">Teleprompter</a></li>
+            </ul>
+
+            <div class="navbar-user">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <button class="btn btn-ghost" id="logout-btn" title="Logout">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="generator-layout">
+                    <!-- Left Panel - Input Form -->
+                    <div class="generator-form-panel">
+                        <div class="panel-header">
+                            <h2>🤖 AI Script Generator</h2>
+                            <p>Create compelling video scripts with AI assistance</p>
+                        </div>
+
+                        <form id="generator-form" class="generator-form">
+                            <!-- Template Selection -->
+                            <div class="form-group">
+                                <label class="form-label">Template</label>
+                                <div class="template-grid">
+                                    <label class="template-option active" data-template="educational">
+                                        <input type="radio" name="template" value="educational" checked>
+                                        <span class="template-icon">📚</span>
+                                        <span class="template-name">Educational</span>
+                                    </label>
+                                    <label class="template-option" data-template="story">
+                                        <input type="radio" name="template" value="story">
+                                        <span class="template-icon">📖</span>
+                                        <span class="template-name">Story</span>
+                                    </label>
+                                    <label class="template-option" data-template="tips">
+                                        <input type="radio" name="template" value="tips">
+                                        <span class="template-icon">💡</span>
+                                        <span class="template-name">Tips</span>
+                                    </label>
+                                    <label class="template-option" data-template="review">
+                                        <input type="radio" name="template" value="review">
+                                        <span class="template-icon">⭐</span>
+                                        <span class="template-name">Review</span>
+                                    </label>
+                                    <label class="template-option" data-template="dayinlife">
+                                        <input type="radio" name="template" value="dayinlife">
+                                        <span class="template-icon">🌅</span>
+                                        <span class="template-name">Day in Life</span>
+                                    </label>
+                                    <label class="template-option" data-template="custom">
+                                        <input type="radio" name="template" value="custom">
+                                        <span class="template-icon">✏️</span>
+                                        <span class="template-name">Custom</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Topic Input -->
+                            <div class="form-group">
+                                <label for="topic" class="form-label">Topic / Subject</label>
+                                <input type="text" id="topic" class="form-input"
+                                    placeholder="e.g., 5 productivity tips for remote workers" required>
+                            </div>
+
+                            <!-- Target Audience -->
+                            <div class="form-group">
+                                <label for="audience" class="form-label">Target Audience</label>
+                                <input type="text" id="audience" class="form-input"
+                                    placeholder="e.g., young professionals, students, parents">
+                            </div>
+
+                            <!-- Language Selection -->
+                            <div class="form-group">
+                                <label for="language" class="form-label">🌐 Script Language</label>
+                                <select id="language" class="form-input">
+                                    <option value="en">English</option>
+                                    <!-- More options loaded dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Tone Selection -->
+                            <div class="form-group">
+                                <label class="form-label">Tone</label>
+                                <div class="tone-options">
+                                    <label class="tone-chip active">
+                                        <input type="radio" name="tone" value="casual" checked>
+                                        <span>😊 Casual</span>
+                                    </label>
+                                    <label class="tone-chip">
+                                        <input type="radio" name="tone" value="professional">
+                                        <span>💼 Professional</span>
+                                    </label>
+                                    <label class="tone-chip">
+                                        <input type="radio" name="tone" value="energetic">
+                                        <span>⚡ Energetic</span>
+                                    </label>
+                                    <label class="tone-chip">
+                                        <input type="radio" name="tone" value="inspiring">
+                                        <span>✨ Inspiring</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Script Length -->
+                            <div class="form-group">
+                                <label class="form-label">Script Length</label>
+                                <div class="length-options">
+                                    <label class="length-option">
+                                        <input type="radio" name="length" value="short">
+                                        <span class="length-name">Short</span>
+                                        <span class="length-duration">30-60s</span>
+                                    </label>
+                                    <label class="length-option active">
+                                        <input type="radio" name="length" value="medium" checked>
+                                        <span class="length-name">Medium</span>
+                                        <span class="length-duration">1-2 min</span>
+                                    </label>
+                                    <label class="length-option">
+                                        <input type="radio" name="length" value="long">
+                                        <span class="length-name">Long</span>
+                                        <span class="length-duration">2-3 min</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Custom Prompt (shown when Custom template selected) -->
+                            <div class="form-group hidden" id="custom-prompt-group">
+                                <label for="custom-prompt" class="form-label">Custom Instructions</label>
+                                <textarea id="custom-prompt" class="form-input form-textarea"
+                                    placeholder="Describe exactly what kind of script you want..." rows="4"></textarea>
+                            </div>
+
+                            <div id="generator-error" class="alert alert-error hidden"></div>
+
+                            <!-- Markdown Mode Toggle -->
+                            <div class="form-group">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="markdown-mode" checked>
+                                    <span>📝 Enable Markdown Formatting</span>
+                                    <small class="toggle-help">Adds bold, lists, and line breaks for teleprompter
+                                        styling</small>
+                                </label>
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" id="generate-btn" class="btn btn-primary btn-lg">
+                                    <span class="btn-text">✨ Generate Script</span>
+                                    <span class="btn-loader loading-spinner hidden"></span>
+                                </button>
+                                <button type="button" id="write-own-btn" class="btn btn-secondary btn-lg">
+                                    ✍️ Write Your Own
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right Panel - Preview -->
+                    <div class="generator-preview-panel">
+                        <div class="panel-header">
+                            <h2>📝 Script Preview</h2>
+                            <div id="preview-actions" class="preview-actions hidden">
+                                <button id="copy-btn" class="btn btn-ghost btn-sm">📋 Copy</button>
+                                <button id="save-btn" class="btn btn-primary btn-sm">💾 Save Script</button>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="preview-empty" class="preview-empty">
+                            <div class="preview-empty-icon">🎬</div>
+                            <h3>Your script will appear here</h3>
+                            <p>Fill in the form and click "Generate" to create your AI-powered script.</p>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="preview-loading" class="preview-loading hidden">
+                            <div class="loading-spinner loading-spinner-lg"></div>
+                            <h3>Generating your script...</h3>
+                            <p>This may take 10-20 seconds</p>
+                        </div>
+
+                        <!-- Script Preview -->
+                        <div id="preview-content" class="preview-content hidden">
+                            <!-- Title Input -->
+                            <div class="form-group">
+                                <label for="script-title" class="form-label">Script Title</label>
+                                <input type="text" id="script-title" class="form-input"
+                                    placeholder="Enter a title for your script">
+                            </div>
+
+                            <!-- Part 1: Hook -->
+                            <div class="script-part">
+                                <div class="script-part-header">
+                                    <span class="part-label">Part 1</span>
+                                    <span class="part-name">Hook</span>
+                                </div>
+                                <div id="script-part1" class="script-part-content" contenteditable="true"></div>
+                            </div>
+
+                            <!-- Part 2: Body -->
+                            <div class="script-part">
+                                <div class="script-part-header">
+                                    <span class="part-label">Part 2</span>
+                                    <span class="part-name">Body</span>
+                                </div>
+                                <div id="script-part2" class="script-part-content" contenteditable="true"></div>
+                            </div>
+
+                            <!-- Part 3: Close -->
+                            <div class="script-part">
+                                <div class="script-part-header">
+                                    <span class="part-label">Part 3</span>
+                                    <span class="part-name">Close</span>
+                                </div>
+                                <div id="script-part3" class="script-part-content" contenteditable="true"></div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="script-stats">
+                                <span id="word-count">0 words</span>
+                                <span id="read-time">~0 min read</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/scripts.js"></script>
+    <script src="js/generator.js"></script>
+</body>
+
+</html>

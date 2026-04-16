@@ -1,0 +1,398 @@
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+}
+
+/* ============================================
+   BRAND PANEL (Left Side)
+   ============================================ */
+.login-brand-panel {
+    flex: 1;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 50%, var(--bg-secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-brand-panel::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    animation: float 20s infinite linear;
+}
+
+@keyframes float {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.brand-content {
+    position: relative;
+    z-index: 1;
+    max-width: 400px;
+}
+
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.logo-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(8px);
+}
+
+.brand-name {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-tagline {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-xl);
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+}
+
+.feature-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color-hover);
+    transform: translateX(4px);
+}
+
+.feature-icon {
+    font-size: var(--font-size-xl);
+}
+
+/* ============================================
+   FORM PANEL (Right Side)
+   ============================================ */
+.login-form-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl);
+    background: var(--bg-secondary);
+}
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* ============================================
+   TABS
+   ============================================ */
+.login-tabs {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+    padding: var(--space-xs);
+    background: var(--bg-input);
+    border-radius: var(--radius-lg);
+}
+
+.login-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.login-tab:hover {
+    color: var(--text-secondary);
+}
+
+.login-tab.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-icon {
+    font-size: var(--font-size-lg);
+}
+
+/* ============================================
+   TAB CONTENT
+   ============================================ */
+.tab-content {
+    display: none;
+    animation: fadeIn var(--transition-normal) ease-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+.form-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.form-subtitle {
+    color: var(--text-muted);
+    margin-bottom: var(--space-xl);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-pink);
+}
+
+.forgot-link {
+    font-size: var(--font-size-sm);
+    color: var(--accent-pink);
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.form-footer a {
+    color: var(--accent-pink);
+    font-weight: 600;
+}
+
+/* ============================================
+   QR CODE STYLES
+   ============================================ */
+.qr-login-container {
+    text-align: center;
+}
+
+.qr-code-wrapper {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: var(--space-xl) auto;
+    background: white;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.qr-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.qr-loading p {
+    color: var(--bg-primary);
+    font-size: var(--font-size-sm);
+}
+
+.qr-canvas {
+    width: 200px !important;
+    height: 200px !important;
+    border-radius: var(--radius-sm);
+}
+
+.qr-expired {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.qr-expired p {
+    color: var(--bg-primary);
+    font-weight: 600;
+}
+
+.qr-status {
+    margin: var(--space-lg) 0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.waiting {
+    background: var(--warning);
+}
+
+.status-dot.scanned {
+    background: var(--success);
+}
+
+.qr-instructions {
+    text-align: left;
+    padding: var(--space-lg);
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    margin-top: var(--space-lg);
+}
+
+.qr-instructions h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.qr-instructions ol {
+    margin-left: var(--space-lg);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.qr-instructions li {
+    margin-bottom: var(--space-xs);
+}
+
+/* ============================================
+   BUTTON STATES
+   ============================================ */
+.btn .btn-loader {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+.btn.loading .btn-text {
+    display: none;
+}
+
+.btn.loading .btn-loader {
+    display: block;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+    .login-brand-panel {
+        display: none;
+    }
+
+    .login-form-panel {
+        flex: none;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-form-panel {
+        padding: var(--space-lg);
+    }
+
+    .login-tabs {
+        flex-direction: column;
+    }
+
+    .qr-code-wrapper {
+        width: 200px;
+        height: 200px;
+    }
+
+    .qr-canvas {
+        width: 160px !important;
+        height: 160px !important;
+    }
+}

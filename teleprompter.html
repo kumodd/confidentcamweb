@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teleprompter | Confident Creator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/teleprompter.css">
+</head>
+
+<body>
+    <!-- Script Selection View -->
+    <div id="selection-view" class="selection-view">
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
+                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
+                    <defs>
+                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
+                            <stop stop-color="#EC4899" />
+                            <stop offset="1" stop-color="#8B5CF6" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Confident Creator</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="scripts.html" class="nav-link">My Scripts</a></li>
+                <li><a href="generator.html" class="nav-link">AI Generator</a></li>
+                <li><a href="teleprompter.html" class="nav-link active">Teleprompter</a></li>
+            </ul>
+
+            <div class="navbar-user">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <button class="btn btn-ghost" id="logout-btn" title="Logout">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <div>
+                        <h1>📺 Teleprompter</h1>
+                        <p>Select a script to start presenting</p>
+                    </div>
+                </div>
+
+                <!-- Quick Enter Custom Text -->
+                <div class="custom-text-card">
+                    <h3>✏️ Quick Start with Custom Text</h3>
+                    <textarea id="custom-text" class="form-input form-textarea"
+                        placeholder="Paste or type your script here..." rows="4"></textarea>
+                    <button id="start-custom-btn" class="btn btn-primary">
+                        ▶️ Start Teleprompter
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span>or select from your scripts</span>
+                </div>
+
+                <!-- Scripts List -->
+                <div id="scripts-list" class="scripts-list">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading scripts...</p>
+                    </div>
+                </div>
+
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">📝</div>
+                    <h3>No scripts yet</h3>
+                    <p>Create a script to use the teleprompter</p>
+                    <a href="generator.html" class="btn btn-primary">Create Script</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Teleprompter View (Full Screen) -->
+    <div id="teleprompter-view" class="teleprompter-view hidden">
+        <!-- Controls Bar (Top) -->
+        <div class="teleprompter-controls-top">
+            <button id="exit-btn" class="control-btn" title="Exit (Esc)">
+                ✕ Exit
+            </button>
+            <div class="script-title-display" id="current-script-title">Untitled Script</div>
+            <button id="settings-btn" class="control-btn" title="Settings">
+                ⚙️ Settings
+            </button>
+        </div>
+
+        <!-- Script Display -->
+        <div id="teleprompter-container" class="teleprompter-container">
+            <div id="teleprompter-content" class="teleprompter-content">
+                <!-- Script text will be injected here -->
+            </div>
+
+            <!-- Reading Line Indicator -->
+            <div class="reading-line"></div>
+        </div>
+
+        <!-- Controls Bar (Bottom) -->
+        <div class="teleprompter-controls-bottom">
+            <div class="control-group">
+                <button id="slower-btn" class="control-btn" title="Slower (↓)">
+                    🐢
+                </button>
+                <span id="speed-display" class="speed-display">50</span>
+                <button id="faster-btn" class="control-btn" title="Faster (↑)">
+                    🐇
+                </button>
+            </div>
+
+            <div class="control-group center">
+                <button id="reset-btn" class="control-btn" title="Reset (R)">
+                    ⏮️
+                </button>
+                <button id="play-pause-btn" class="control-btn large" title="Play/Pause (Space)">
+                    ▶️
+                </button>
+            </div>
+
+            <div class="control-group">
+                <button id="mirror-btn" class="control-btn" title="Mirror (M)">
+                    🪞
+                </button>
+                <button id="voice-btn" class="control-btn" title="Voice Control (V)">
+                    🎤
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel hidden">
+            <div class="settings-header">
+                <h3>⚙️ Settings</h3>
+                <button id="close-settings" class="control-btn">✕</button>
+            </div>
+
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label>Font Size</label>
+                    <input type="range" id="font-size" min="24" max="96" value="48">
+                    <span id="font-size-value">48px</span>
+                </div>
+
+                <div class="setting-group">
+                    <label>Scroll Speed</label>
+                    <input type="range" id="scroll-speed" min="10" max="150" value="50">
+                    <span id="scroll-speed-value">50</span>
+                </div>
+
+                <div class="setting-group">
+                    <label>Line Height</label>
+                    <input type="range" id="line-height" min="1" max="3" step="0.1" value="1.8">
+                    <span id="line-height-value">1.8</span>
+                </div>
+
+                <div class="setting-group">
+                    <label>Text Color</label>
+                    <div class="color-options">
+                        <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF"></button>
+                        <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00"></button>
+                        <button class="color-btn" data-color="#00FF00" style="background: #00FF00"></button>
+                        <button class="color-btn" data-color="#00FFFF" style="background: #00FFFF"></button>
+                        <button class="color-btn" data-color="#EC4899" style="background: #EC4899"></button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>Background</label>
+                    <div class="color-options">
+                        <button class="bg-btn active" data-bg="#000000" style="background: #000000"></button>
+                        <button class="bg-btn" data-bg="#0F0F1A" style="background: #0F0F1A"></button>
+                        <button class="bg-btn" data-bg="#1a1a2e" style="background: #1a1a2e"></button>
+                        <button class="bg-btn" data-bg="#001a00" style="background: #001a00"></button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="show-parts"> Show Part Labels
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="show-divider" checked> Show Reading Line
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Status Indicator -->
+        <div id="voice-indicator" class="voice-indicator hidden">
+            <span class="voice-dot"></span>
+            <span>Listening...</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/scripts.js"></script>
+    <script src="js/teleprompter.js"></script>
+</body>
+
+</html>

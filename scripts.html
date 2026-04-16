@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Scripts | Confident Creator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/scripts-page.css">
+</head>
+
+<body>
+    <div class="page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
+                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
+                    <defs>
+                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
+                            <stop stop-color="#EC4899" />
+                            <stop offset="1" stop-color="#8B5CF6" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Confident Creator</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="scripts.html" class="nav-link active">My Scripts</a></li>
+                <li><a href="generator.html" class="nav-link">AI Generator</a></li>
+                <li><a href="teleprompter.html" class="nav-link">Teleprompter</a></li>
+            </ul>
+
+            <div class="navbar-user">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <button class="btn btn-ghost" id="logout-btn" title="Logout">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Header -->
+                <div class="page-header">
+                    <div>
+                        <h1>My Scripts</h1>
+                        <p>Manage and edit your content scripts</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="generator.html" class="btn btn-primary">
+                            <span>✨</span> Create New
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="scripts-toolbar">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" class="form-input" placeholder="Search scripts...">
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="pending">Pending</button>
+                        <button class="filter-btn" data-filter="recorded">Recorded</button>
+                    </div>
+                </div>
+
+                <!-- Scripts List -->
+                <div id="scripts-container" class="scripts-container">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading scripts...</p>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">📝</div>
+                    <h3>No scripts found</h3>
+                    <p>Create your first script or adjust your search filters.</p>
+                    <a href="generator.html" class="btn btn-primary">Create Script</a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Edit Script Modal -->
+        <div id="edit-modal" class="modal-backdrop">
+            <div class="modal modal-lg">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modal-title">Edit Script</h3>
+                    <span class="modal-close" id="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="script-form">
+                        <input type="hidden" id="script-id">
+
+                        <div class="form-group">
+                            <label for="script-title" class="form-label">Title</label>
+                            <input type="text" id="script-title" class="form-input" placeholder="Script title..."
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="script-part1" class="form-label">
+                                Part 1: Hook
+                                <span class="label-hint">Grab attention immediately</span>
+                            </label>
+                            <textarea id="script-part1" class="form-input form-textarea"
+                                placeholder="Start with a question, bold statement, or hook..." rows="4"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="script-part2" class="form-label">
+                                Part 2: Body
+                                <span class="label-hint">Deliver the main content</span>
+                            </label>
+                            <textarea id="script-part2" class="form-input form-textarea"
+                                placeholder="The main content and value..." rows="6"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="script-part3" class="form-label">
+                                Part 3: Close
+                                <span class="label-hint">Call to action and wrap up</span>
+                            </label>
+                            <textarea id="script-part3" class="form-input form-textarea"
+                                placeholder="End with a call to action or memorable close..." rows="4"></textarea>
+                        </div>
+
+                        <div id="form-error" class="alert alert-error hidden"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                    <button type="submit" form="script-form" class="btn btn-primary" id="save-script">
+                        <span class="btn-text">Save Changes</span>
+                        <span class="btn-loader loading-spinner hidden"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="modal-backdrop">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">Delete Script</h3>
+                    <span class="modal-close" id="close-delete-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete "<strong id="delete-script-title"></strong>"?</p>
+                    <p class="text-muted">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-delete">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-delete" style="background: var(--error);">
+                        Delete Script
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/scripts.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="js/scripts-page.js"></script>
+</body>
+
+</html>

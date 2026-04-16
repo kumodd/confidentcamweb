@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Confident Creator</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+    <div class="page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
+                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
+                    <defs>
+                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
+                            <stop stop-color="#EC4899" />
+                            <stop offset="1" stop-color="#8B5CF6" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Confident Creator</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="scripts.html" class="nav-link">My Scripts</a></li>
+                <li><a href="generator.html" class="nav-link">AI Generator</a></li>
+                <li><a href="teleprompter.html" class="nav-link">Teleprompter</a></li>
+            </ul>
+
+            <div class="navbar-user">
+                <span id="user-email" class="user-email"></span>
+                <div class="user-avatar" id="user-avatar">U</div>
+                <button class="btn btn-ghost" id="logout-btn" title="Logout">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Welcome Header -->
+                <div class="dashboard-header animate-slideUp">
+                    <div>
+                        <h1>Welcome back, <span id="user-name">Creator</span>! 👋</h1>
+                        <p>Here's an overview of your content creation progress.</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="generator.html" class="btn btn-primary">
+                            <span>✨</span> Create New Script
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid animate-slideUp" style="animation-delay: 0.1s">
+                    <div class="stat-card">
+                        <div class="stat-icon scripts">📝</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="total-scripts">0</span>
+                            <span class="stat-label">Total Scripts</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon recorded">🎬</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="recorded-scripts">0</span>
+                            <span class="stat-label">Recorded</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">⏳</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="pending-scripts">0</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon streak">🔥</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="creation-streak">0</span>
+                            <span class="stat-label">Day Streak</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="section-header">
+                    <h2>Quick Actions</h2>
+                </div>
+
+                <div class="quick-actions animate-slideUp" style="animation-delay: 0.2s">
+                    <a href="scripts.html" class="action-card">
+                        <div class="action-icon">📋</div>
+                        <h3>My Scripts</h3>
+                        <p>View and manage all your scripts</p>
+                    </a>
+                    <a href="generator.html" class="action-card">
+                        <div class="action-icon">🤖</div>
+                        <h3>AI Generator</h3>
+                        <p>Create scripts with AI assistance</p>
+                    </a>
+                    <a href="teleprompter.html" class="action-card">
+                        <div class="action-icon">📺</div>
+                        <h3>Teleprompter</h3>
+                        <p>Practice with professional teleprompter</p>
+                    </a>
+                </div>
+
+                <!-- Recent Scripts -->
+                <div class="section-header">
+                    <h2>Recent Scripts</h2>
+                    <a href="scripts.html" class="btn btn-ghost">View All →</a>
+                </div>
+
+                <div id="recent-scripts" class="scripts-list animate-slideUp" style="animation-delay: 0.3s">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading scripts...</p>
+                    </div>
+                </div>
+
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">📝</div>
+                    <h3>No scripts yet</h3>
+                    <p>Create your first script to get started!</p>
+                    <a href="generator.html" class="btn btn-primary">Create Script</a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Confident Creator. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/scripts.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

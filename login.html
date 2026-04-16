@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Confident Creator</title>
+    <meta name="description"
+        content="Login to Confident Creator Web Portal - Manage scripts, create AI content, and use the teleprompter.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- QR Code Library (qrcodejs - reliable and simple) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body>
+    <div class="login-page">
+        <!-- Left Panel - Branding -->
+        <aside class="login-brand-panel">
+            <div class="brand-content">
+                <a href="index.html" class="logo-wrapper" style="text-decoration: none;">
+                    <div class="logo-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#gradient)" stroke-width="2"
+                                fill="none" />
+                            <circle cx="24" cy="24" r="8" fill="url(#gradient)" />
+                            <defs>
+                                <linearGradient id="gradient" x1="4" y1="4" x2="44" y2="44">
+                                    <stop stop-color="#EC4899" />
+                                    <stop offset="1" stop-color="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h1 class="brand-name">Confident Creator</h1>
+                </a>
+                <p class="brand-tagline">Create scripts, generate AI content, and present like a pro with our
+                    professional teleprompter.</p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">✍️</span>
+                        <span>Manage your scripts from anywhere</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🤖</span>
+                        <span>Generate scripts with AI assistance</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📺</span>
+                        <span>Professional teleprompter with voice control</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Panel - Login Form -->
+        <main class="login-form-panel">
+            <div class="login-container">
+                <!-- Tab Switcher -->
+                <div class="login-tabs">
+                    <button class="login-tab active" data-tab="email">
+                        <span class="tab-icon">📧</span>
+                        Email Login
+                    </button>
+                    <button class="login-tab" data-tab="qr">
+                        <span class="tab-icon">📱</span>
+                        QR Login
+                    </button>
+                </div>
+
+                <!-- Email Login Form -->
+                <div id="email-tab" class="tab-content active">
+                    <form id="login-form" class="login-form">
+                        <h2 class="form-title">Welcome Back</h2>
+                        <p class="form-subtitle">Sign in to access your scripts and teleprompter</p>
+
+                        <div id="login-error" class="alert alert-error hidden"></div>
+                        <div id="login-success" class="alert alert-success hidden"></div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" class="form-input" placeholder="your@email.com" required
+                                autocomplete="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" class="form-input" placeholder="••••••••" required
+                                autocomplete="current-password">
+                        </div>
+
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="remember" checked>
+                                <span>Remember me</span>
+                            </label>
+                            <a href="#" id="forgot-password-link" class="forgot-link">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">
+                            <span class="btn-text">Sign In</span>
+                            <span class="btn-loader loading-spinner hidden"></span>
+                        </button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+                    </div>
+                </div>
+
+                <!-- QR Code Login -->
+                <div id="qr-tab" class="tab-content">
+                    <div class="qr-login-container">
+                        <h2 class="form-title">Scan with App</h2>
+                        <p class="form-subtitle">Use the Confident Creator app to scan this QR code</p>
+
+                        <div class="qr-code-wrapper">
+                            <div id="qr-loading" class="qr-loading">
+                                <div class="loading-spinner loading-spinner-lg"></div>
+                                <p>Generating QR code...</p>
+                            </div>
+                            <div id="qr-canvas" class="qr-canvas hidden"></div>
+                            <div id="qr-expired" class="qr-expired hidden">
+                                <p>QR code expired</p>
+                                <button id="refresh-qr" class="btn btn-secondary">
+                                    <span>🔄</span> Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="qr-status">
+                            <div id="qr-status-waiting" class="status-item">
+                                <span class="status-dot waiting"></span>
+                                <span>Waiting for scan...</span>
+                            </div>
+                            <div id="qr-status-scanned" class="status-item hidden">
+                                <span class="status-dot scanned"></span>
+                                <span>Scanned! Authenticating...</span>
+                            </div>
+                        </div>
+
+                        <div class="qr-instructions">
+                            <h4>How to scan:</h4>
+                            <ol>
+                                <li>Open the Confident Creator app</li>
+                                <li>Go to Settings → Web Login</li>
+                                <li>Scan this QR code with your camera</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Modal -->
+                <div id="forgot-modal" class="modal-backdrop">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Reset Password</h3>
+                            <span class="modal-close" id="close-forgot-modal">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <p>Enter your email address and we'll send you a link to reset your password.</p>
+                            <form id="forgot-form">
+                                <div class="form-group">
+                                    <label for="forgot-email" class="form-label">Email</label>
+                                    <input type="email" id="forgot-email" class="form-input"
+                                        placeholder="your@email.com" required>
+                                </div>
+                                <div id="forgot-error" class="alert alert-error hidden"></div>
+                                <div id="forgot-success" class="alert alert-success hidden"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancel-forgot">Cancel</button>
+                            <button type="submit" form="forgot-form" class="btn btn-primary" id="send-reset-btn">Send
+                                Reset Link</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/qr-auth.js"></script>
+    <script src="js/login.js"></script>
+</body>
+
+</html>
