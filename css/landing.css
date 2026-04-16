@@ -129,6 +129,7 @@ body {
     align-items: center;
     gap: 12px;
     text-decoration: none;
+    z-index: 1002;
 }
 
 .brand-icon {
@@ -147,6 +148,12 @@ body {
     font-weight: 700;
     color: var(--text-pure);
     letter-spacing: -0.5px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .nav-links {
@@ -919,12 +926,12 @@ body.no-scroll {
     .nav-links, .nav-download-btn { display: none !important; }
     .mobile-menu-toggle { display: flex; }
 
-    .hero-title { font-size: 48px; }
-    .section-header h2 { font-size: 36px; }
+    .hero-title { font-size: 40px; }
+    .section-header h2 { font-size: 32px; }
     .features-grid, .testimonial-grid { grid-template-columns: 1fr; }
     
-    .cta-content h2 { font-size: 36px; }
-    .cta-container { padding: 60px 24px; }
+    .cta-content h2 { font-size: 32px; }
+    .cta-container { padding: 40px 24px; }
     
     .footer-container {
         flex-direction: column;
@@ -950,27 +957,41 @@ body.no-scroll {
 }
 
 @media (max-width: 480px) {
-    .hero-title { font-size: 36px; }
-    .hero { padding: 140px 0 80px; }
+    .hero-title { font-size: 32px; }
+    .hero { padding: 120px 0 60px; }
+    .hero-desc { font-size: 16px; margin-bottom: 32px; }
+    .container { padding: 0 16px; }
     
+    .brand-name { font-size: 20px; }
+    .brand-icon { width: 32px; height: 32px; }
+
     .phone-mockup {
-        width: 240px;
-        height: 480px;
+        width: 100%;
+        max-width: 280px;
+        height: 520px;
     }
     
     .float-card {
-        padding: 12px;
+        padding: 10px;
+        width: 140px; 
     }
+    .card-text h4 { font-size: 12px; }
+    .card-text p { font-size: 10px; }
+    .icon-box { width: 30px; height: 30px; font-size: 16px; }
     
     .card-1 {
-        left: -10px;
-        top: 10%;
+        left: 2%;
+        top: 15%;
     }
     
     .card-2 {
-        right: -10px;
-        bottom: 20%;
+        right: 2%;
+        bottom: 15%;
     }
+
+    .portal-content h2 { font-size: 28px; }
+    .mock-sidebar { width: 40px; }
+    .browser-content { padding: 12px; }
 }
 
 /* ========================================================
