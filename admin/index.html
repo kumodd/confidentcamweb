@@ -51,6 +51,10 @@
                     <span class="nav-icon">🚩</span>
                     <span>Feature Flags</span>
                 </button>
+                <button class="admin-nav-item" data-tab="landing">
+                    <span class="nav-icon">🏠</span>
+                    <span>Landing Page</span>
+                </button>
             </nav>
 
             <div class="admin-sidebar-footer">
@@ -165,6 +169,41 @@
                 </div>
             </div>
 
+            <!-- ── LANDING PAGE TAB ── -->
+            <div class="admin-tab-content" id="tab-landing">
+                <div class="admin-page-header">
+                    <h1>🏠 Landing Page Content</h1>
+                    <p>Edit all text, features, and testimonials on the public landing page</p>
+                </div>
+
+                <!-- Section Editors -->
+                <div id="landing-sections-container">
+                    <p class="text-muted">Loading sections...</p>
+                </div>
+
+                <!-- Features -->
+                <div style="margin-top: 32px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2>Feature Cards</h2>
+                        <button class="btn btn-primary btn-sm" onclick="dashboard.showAddFeatureModal()">➕ Add Feature</button>
+                    </div>
+                    <div class="prompts-grid" id="landing-features-container">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Testimonials -->
+                <div style="margin-top: 32px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2>Testimonials</h2>
+                        <button class="btn btn-primary btn-sm" onclick="dashboard.showAddTestimonialModal()">➕ Add Testimonial</button>
+                    </div>
+                    <div class="prompts-grid" id="landing-testimonials-container">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -255,6 +294,138 @@
 
     <!-- Toast Container -->
     <div id="toast-container"></div>
+
+    <!-- ============================================
+         LANDING SECTION EDIT MODAL
+         ============================================ -->
+    <div id="section-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="section-modal-title">Edit Section</h3>
+                <span class="modal-close" onclick="dashboard._hideModal('section-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body" id="section-modal-fields">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('section-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.saveLandingSection()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         LANDING FEATURE EDIT MODAL
+         ============================================ -->
+    <div id="feature-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="feature-modal-title">Edit Feature</h3>
+                <span class="modal-close" onclick="dashboard._hideModal('feature-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-feature-id">
+                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Icon</label>
+                        <input type="text" id="edit-feature-icon" class="form-input" style="font-size: 24px; text-align: center;" placeholder="⭐">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" id="edit-feature-title" class="form-input" placeholder="Feature title">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="edit-feature-desc" class="form-input form-textarea" rows="3" placeholder="Feature description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" id="edit-feature-sort" class="form-input" value="0" style="width: 100px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('feature-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.saveLandingFeature()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         TESTIMONIAL EDIT MODAL
+         ============================================ -->
+    <div id="testimonial-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="testimonial-modal-title">Edit Testimonial</h3>
+                <span class="modal-close" onclick="dashboard._hideModal('testimonial-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-testimonial-id">
+                <div class="form-group">
+                    <label class="form-label">Quote</label>
+                    <textarea id="edit-testimonial-quote" class="form-input form-textarea" rows="4" placeholder="What they said..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 80px; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Author Name</label>
+                        <input type="text" id="edit-testimonial-name" class="form-input" placeholder="Sarah Jenkins">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stars</label>
+                        <select id="edit-testimonial-stars" class="form-input">
+                            <option value="5">5 ★</option>
+                            <option value="4">4 ★</option>
+                            <option value="3">3 ★</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 60px; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <input type="text" id="edit-testimonial-role" class="form-input" placeholder="Startup Founder">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial</label>
+                        <input type="text" id="edit-testimonial-initial" class="form-input" maxlength="2" placeholder="S">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sort</label>
+                        <input type="number" id="edit-testimonial-sort" class="form-input" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Profile Image URL</label>
+                    <input type="url" id="edit-testimonial-image" class="form-input" placeholder="https://...">
+                </div>
+                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Social Profiles</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group"><label class="form-label">📸 Instagram URL</label><input type="url" id="edit-testimonial-ig-url" class="form-input" placeholder="https://instagram.com/..."></div>
+                    <div class="form-group"><label class="form-label">Instagram Handle</label><input type="text" id="edit-testimonial-ig-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label">▶️ YouTube URL</label><input type="url" id="edit-testimonial-yt-url" class="form-input" placeholder="https://youtube.com/..."></div>
+                    <div class="form-group"><label class="form-label">YouTube Channel</label><input type="text" id="edit-testimonial-yt-channel" class="form-input" placeholder="Channel Name"></div>
+                    <div class="form-group"><label class="form-label">𝕏 Twitter/X URL</label><input type="url" id="edit-testimonial-tw-url" class="form-input" placeholder="https://x.com/..."></div>
+                    <div class="form-group"><label class="form-label">Twitter Handle</label><input type="text" id="edit-testimonial-tw-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label">🎵 TikTok URL</label><input type="url" id="edit-testimonial-tt-url" class="form-input" placeholder="https://tiktok.com/..."></div>
+                    <div class="form-group"><label class="form-label">TikTok Handle</label><input type="text" id="edit-testimonial-tt-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label">💼 LinkedIn URL</label><input type="url" id="edit-testimonial-li-url" class="form-input" placeholder="https://linkedin.com/in/..."></div>
+                    <div class="form-group"><label class="form-label">🌐 Website URL</label><input type="url" id="edit-testimonial-web-url" class="form-input" placeholder="https://..."></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group"><label class="form-label">Follower Count</label><input type="text" id="edit-testimonial-followers" class="form-input" placeholder="32k"></div>
+                    <div class="form-group"><label class="form-label">Follower Platform</label><input type="text" id="edit-testimonial-follower-platform" class="form-input" placeholder="Instagram"></div>
+                </div>
+                <div style="display: flex; gap: 24px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="edit-testimonial-verified"> Verified</label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="edit-testimonial-featured"> Featured</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('testimonial-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.saveLandingTestimonial()">Save</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="../js/config.js"></script>

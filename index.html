@@ -6,6 +6,21 @@
     <title>Confident Creator | 30 Days to Camera Confidence</title>
     <meta name="description" content="Build unstoppable camera confidence in 30 days. Auto-generating AI scripts, a professional teleprompter, and daily video challenges.">
     
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" id="og-title" content="Confident Creator — Master the Camera in 30 Days">
+    <meta property="og:description" id="og-description" content="Join 10,000+ creators who overcame camera anxiety with AI-powered daily challenges and a pro teleprompter.">
+    <meta property="og:image" id="og-image" content="">
+    <meta property="og:url" id="og-url" content="https://confidentcreator.com">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" id="twitter-card" content="summary_large_image">
+    <meta name="twitter:title" id="twitter-title" content="Confident Creator — Master the Camera in 30 Days">
+    <meta name="twitter:description" id="twitter-desc" content="Join 10,000+ creators who overcame camera anxiety.">
+    
+    <!-- Canonical -->
+    <link rel="canonical" id="canonical-url" href="https://confidentcreator.com">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +31,23 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" id="schema-jsonld">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Confident Creator",
+        "operatingSystem": "Android, iOS",
+        "applicationCategory": "LifestyleApplication",
+        "description": "AI-powered camera confidence app with daily challenges, script generator, and teleprompter.",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "10000"
+        }
+    }
+    </script>
 </head>
 <body>
 
@@ -70,26 +102,25 @@
         
         <div class="container hero-grid">
             <div class="hero-content" data-animate="fade-up">
-                <div class="hero-badge">✨ Build Unstoppable Camera Presence</div>
+                <div class="hero-badge" id="hero-badge">✨ Build Unstoppable Camera Presence</div>
                 <h1 class="hero-title">
-                    Master the Camera in <span class="text-gradient">30 Days.</span>
+                    <span id="hero-title-text">Master the Camera in </span><span class="text-gradient" id="hero-title-highlight">30 Days.</span>
                 </h1>
-                <p class="hero-desc">
+                <p class="hero-desc" id="hero-desc">
                     Stop letting camera shyness hold back your business. Confident Creator combines daily guided challenges, AI-generated viral scripts, and a professional teleprompter to transform how you speak on video.
                 </p>
                 
                 <div class="action-buttons-group" style="margin-bottom: 24px;">
-                    <button class="btn btn-primary coming-soon-btn" style="height: 56px; padding: 0 32px; font-size: 18px;">
-                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 13.5l-4.5 4.5V4h-2v14l-4.5-4.5-1.5 1.5 7 7 7-7-1.5-1.5z"/></svg>
-                        Download for iOS
+                    <button class="btn btn-primary coming-soon-btn" id="hero-ios-btn" style="height: 56px; padding: 0 32px; font-size: 18px;">
+                        🍎 Get it on iPhone
                     </button>
-                    <button class="btn btn-outline coming-soon-btn" style="height: 56px; padding: 0 32px; font-size: 18px;">
-                        Download for Android
+                    <button class="btn btn-outline coming-soon-btn" id="hero-android-btn" style="height: 56px; padding: 0 32px; font-size: 18px;">
+                        ▶️ Get it on Android
                     </button>
                 </div>
                 
                 <div style="margin-bottom: 48px;">
-                    <a href="https://instagram.com/confidentcreator.app" target="_blank" style="color: var(--brand-secondary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="https://instagram.com/confidentcreator.app" target="_blank" id="hero-instagram-link" style="color: var(--brand-secondary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                         Follow @confidentcreator.app
                     </a>
@@ -97,12 +128,12 @@
                 
                 <div class="hero-metrics">
                     <div class="metric">
-                        <span class="metric-value text-gradient-alt">10k+</span>
-                        <span class="metric-label">Creators Transformed</span>
+                        <span class="metric-value text-gradient-alt" id="metric1-value">10k+</span>
+                        <span class="metric-label" id="metric1-label">Creators Transformed</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-value text-gradient-alt">4.9/5</span>
-                        <span class="metric-label">App Store Rating</span>
+                        <span class="metric-value text-gradient-alt" id="metric2-value">4.9/5</span>
+                        <span class="metric-label" id="metric2-label">App Store Rating</span>
                     </div>
                 </div>
             </div>
@@ -146,11 +177,11 @@
     <section class="features" id="features">
         <div class="container">
             <div class="section-header" data-animate="fade-up">
-                <h2>Everything you need to go viral</h2>
-                <p>We've combined the exact tools professional content teams use into one intuitive app.</p>
+                <h2 id="features-heading">Everything you need to go viral</h2>
+                <p id="features-subtitle">We've combined the exact tools professional content teams use into one intuitive app.</p>
             </div>
             
-            <div class="features-grid">
+            <div class="features-grid" id="features-grid">
                 <div class="feature-card glass" data-animate="fade-up">
                     <div class="feature-icon-wrapper">
                         <span>🗓️</span>
@@ -208,28 +239,28 @@
             </div>
             
             <div class="portal-content" data-animate="fade-up" style="animation-delay: 0.2s;">
-                <div class="hero-badge">Cloud Synced</div>
-                <h2>Type on Desktop,<br>Record on Mobile</h2>
-                <p>Writing scripts on a phone keyboard is frustrating. That's why every Confident Creator account includes free access to our powerful Web Portal.</p>
+                <div class="hero-badge" id="portal-badge">Cloud Synced</div>
+                <h2 id="portal-heading">Type on Desktop,<br>Record on Mobile</h2>
+                <p id="portal-desc">Writing scripts on a phone keyboard is frustrating. That's why every Confident Creator account includes free access to our powerful Web Portal.</p>
                 
                 <ul class="portal-list">
                     <li>
                         <div class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                         <div>
-                            <strong>Instant QR Code Login</strong>
-                            <p style="font-size: 14px; margin-bottom: 0;">Scan a QR code with the mobile app to securely log in to the web browser in seconds.</p>
+                            <strong id="portal-check1-title">Instant QR Code Login</strong>
+                            <p style="font-size: 14px; margin-bottom: 0;" id="portal-check1-desc">Scan a QR code with the mobile app to securely log in to the web browser in seconds.</p>
                         </div>
                     </li>
                     <li>
                         <div class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                         <div>
-                            <strong>Seamless Cloud Sync</strong>
-                            <p style="font-size: 14px; margin-bottom: 0;">Scripts written or generated on your laptop instantly appear in your mobile teleprompter.</p>
+                            <strong id="portal-check2-title">Seamless Cloud Sync</strong>
+                            <p style="font-size: 14px; margin-bottom: 0;" id="portal-check2-desc">Scripts written or generated on your laptop instantly appear in your mobile teleprompter.</p>
                         </div>
                     </li>
                 </ul>
                 
-                <a href="login.html" class="btn btn-outline" style="margin-top: 16px;">Try the Web Portal</a>
+                <a href="login.html" class="btn btn-outline" id="portal-cta-btn" style="margin-top: 16px;">Try the Web Portal</a>
             </div>
         </div>
     </section>
@@ -238,10 +269,10 @@
     <section class="testimonials" id="testimonials">
         <div class="container">
             <div class="section-header" data-animate="fade-up">
-                <h2>Loved by thousands of creators</h2>
+                <h2 id="testimonials-heading">Loved by thousands of creators</h2>
             </div>
             
-            <div class="testimonial-grid">
+            <div class="testimonial-grid" id="testimonials-grid">
                 <div class="testimonial-card" data-animate="fade-up">
                     <div class="stars">★★★★★</div>
                     <p class="quote">"I used to spend 4 hours recording a simple 60-second video because I kept messing up my lines. The teleprompter literally changed my life."</p>
@@ -287,11 +318,11 @@
             <div class="cta-container" data-animate="fade-up">
                 <div class="cta-bg"></div>
                 <div class="cta-content">
-                    <h2>Ready to press record?</h2>
-                    <p>Join thousands of creators who have overcome their camera anxiety and built massive audiences using Confident Creator.</p>
+                    <h2 id="cta-heading">Ready to press record?</h2>
+                    <p id="cta-desc">Join thousands of creators who have overcome their camera anxiety and built massive audiences using Confident Creator.</p>
                     <div class="action-buttons-group cta-buttons-group">
-                        <button class="btn coming-soon-btn" style="background: white; color: var(--brand-primary); height: 56px; padding: 0 32px;">Download for iOS</button>
-                        <button class="btn btn-outline coming-soon-btn" style="height: 56px; padding: 0 32px; border-color: rgba(255,255,255,0.4);">Download for Android</button>
+                        <button class="btn coming-soon-btn" id="cta-ios-btn" style="background: white; color: var(--brand-primary); height: 56px; padding: 0 32px;">Download for iOS</button>
+                        <button class="btn btn-outline coming-soon-btn" id="cta-android-btn" style="height: 56px; padding: 0 32px; border-color: rgba(255,255,255,0.4);">Download for Android</button>
                     </div>
                 </div>
             </div>
@@ -309,17 +340,17 @@
                             <circle cx="24" cy="24" r="8" fill="white"/>
                         </svg>
                     </div>
-                    <span class="brand-name" style="font-size: 20px;">Confident Creator</span>
+                    <span class="brand-name" id="footer-brand" style="font-size: 20px;">Confident Creator</span>
                 </div>
                 
                 <div class="footer-links">
-                    <a href="https://instagram.com/confidentcreator.app" target="_blank" class="footer-link">@confidentcreator.app</a>
+                    <a href="https://instagram.com/confidentcreator.app" target="_blank" class="footer-link" id="footer-instagram-link">@confidentcreator.app</a>
                     <a href="privacy-policy.html" class="footer-link">Privacy Policy</a>
                     <a href="terms-of-service.html" class="footer-link">Terms of Service</a>
                     <a href="login.html" class="footer-link">Portal Login</a>
                 </div>
             </div>
-            <div class="footer-bottom">
+            <div class="footer-bottom" id="footer-copyright">
                 &copy; 2026 Confident Creator. All rights reserved.
             </div>
         </div>
@@ -329,12 +360,18 @@
     <div id="coming-soon-modal" class="modal-backdrop">
         <div class="modal">
             <button class="modal-close-icon" id="close-modal-btn">&times;</button>
-            <div class="modal-icon">🚀</div>
-            <h3 class="modal-title">Coming Soon!</h3>
-            <p class="modal-body">We're putting the final polish on the Confident Creator app. Follow our journey on Instagram to be the first to know when we launch!</p>
-            <a href="https://instagram.com/confidentcreator.app" target="_blank" class="btn btn-primary modal-close-btn" style="height: 50px;">Follow @confidentcreator.app</a>
+            <div class="modal-icon" id="modal-icon">🚀</div>
+            <h3 class="modal-title" id="modal-title-text">Coming Soon!</h3>
+            <p class="modal-body" id="modal-body-text">We're putting the final polish on the Confident Creator app. Follow our journey on Instagram to be the first to know when we launch!</p>
+            <a href="https://instagram.com/confidentcreator.app" target="_blank" class="btn btn-primary modal-close-btn" id="modal-cta-btn" style="height: 50px;">Follow @confidentcreator.app</a>
         </div>
     </div>
+
+    <!-- Supabase + Dynamic Content -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/landing-content.js"></script>
 
     <!-- Animation Script -->
     <script>

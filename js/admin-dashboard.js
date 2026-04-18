@@ -10,6 +10,11 @@ class AdminDashboard {
         this.flagsData = [];
         this.currentCategory = 'all';
         this.editingKey = null;
+        // Landing page state
+        this.landingSections = {};
+        this.landingFeatures = [];
+        this.landingTestimonials = [];
+        this.editingSectionKey = null;
     }
 
     async init() {
@@ -52,6 +57,7 @@ class AdminDashboard {
             case 'app-config': this.loadAppConfig(); break;
             case 'prompts': this.loadPrompts(); break;
             case 'flags': this.loadFlags(); break;
+            case 'landing': this.loadLanding(); break;
         }
     }
 
@@ -425,6 +431,362 @@ class AdminDashboard {
             // Revert toggle
             const input = document.querySelector(`[onchange*="${key}"]`);
             if (input) input.checked = !enabled;
+        }
+    }
+
+    // ============================================
+    // LANDING PAGE TAB
+    // ============================================
+
+    async loadLanding() {
+        try {
+            const [sectionsRes, featuresRes, testimonialsRes] = await Promise.all([
+                this.supabase.from('landing_content').select('*'),
+                this.supabase.from('landing_features').select('*').order('sort_order'),
+                this.supabase.from('landing_testimonials').select('*').order('sort_order'),
+            ]);
+
+            this.landingSections = {};
+            (sectionsRes.data || []).forEach(r => { this.landingSections[r.section_key] = r.content; });
+            this.landingFeatures = featuresRes.data || [];
+            this.landingTestimonials = testimonialsRes.data || [];
+
+            this._renderLandingSections();
+            this._renderLandingFeatures();
+            this._renderLandingTestimonials();
+        } catch (e) {
+            console.error('Failed to load landing:', e);
+            this.showToast('Failed to load landing content', 'error');
+        }
+    }
+
+    // --- Section Editors ---
+
+    _renderLandingSections() {
+        const container = document.getElementById('landing-sections-container');
+        if (!container) return;
+
+        const sectionLabels = {
+            seo: { label: '🔍 SEO Settings', fields: ['page_title', 'meta_description', 'og_title', 'og_description', 'og_image_url', 'canonical_url', 'schema_rating_value', 'schema_rating_count'] },
+            hero: { label: '🦸 Hero Section', fields: ['badge', 'title', 'title_highlight', 'description', 'ios_btn', 'android_btn', 'instagram_url', 'instagram_handle', 'metric1_value', 'metric1_label', 'metric2_value', 'metric2_label', 'metric3_value', 'metric3_label'] },
+            features_header: { label: '⭐ Features Header', fields: ['title', 'subtitle'] },
+            portal: { label: '🌐 Web Portal Section', fields: ['badge', 'title', 'description', 'check1_title', 'check1_desc', 'check2_title', 'check2_desc', 'cta_text', 'cta_url'] },
+            testimonials_header: { label: '💬 Testimonials Header', fields: ['title', 'subtitle'] },
+            cta: { label: '📣 CTA Section', fields: ['title', 'description', 'ios_btn', 'android_btn'] },
+            footer: { label: '🦶 Footer', fields: ['brand_name', 'instagram_url', 'instagram_handle', 'copyright'] },
+            modal: { label: '🚀 Coming Soon Modal', fields: ['icon', 'title', 'body', 'btn_text', 'btn_url'] },
+        };
+
+        container.innerHTML = Object.entries(sectionLabels).map(([key, meta]) => {
+            const data = this.landingSections[key] || {};
+            const fieldCount = Object.keys(data).length;
+            const preview = meta.fields.slice(0, 2).map(f => data[f] ? `${f}: "${String(data[f]).substring(0, 40)}..."` : '').filter(Boolean).join(', ');
+            return `
+                <div class="prompt-card" style="margin-bottom: 12px;">
+                    <div class="prompt-card-header">
+                        <div>
+                            <h3 class="prompt-key">${meta.label}</h3>
+                            <span class="admin-badge">${fieldCount} fields</span>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="dashboard.editLandingSection('${key}')">✏️ Edit</button>
+                    </div>
+                    <p class="text-muted" style="font-size: 13px; margin: 0;">${preview || 'No content yet'}</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    editLandingSection(key) {
+        this.editingSectionKey = key;
+        const data = this.landingSections[key] || {};
+
+        const sectionLabels = {
+            seo: '🔍 SEO Settings', hero: '🦸 Hero Section', features_header: '⭐ Features Header',
+            portal: '🌐 Web Portal', testimonials_header: '💬 Testimonials Header',
+            cta: '📣 CTA Section', footer: '🦶 Footer', modal: '🚀 Coming Soon Modal'
+        };
+
+        document.getElementById('section-modal-title').textContent = `Edit: ${sectionLabels[key] || key}`;
+
+        const fieldsContainer = document.getElementById('section-modal-fields');
+        const longFields = ['description', 'meta_description', 'og_description', 'body', 'schema_description'];
+
+        fieldsContainer.innerHTML = Object.entries(data).map(([field, value]) => {
+            const isLong = longFields.includes(field) || String(value).length > 80;
+            return `
+                <div class="form-group">
+                    <label class="form-label">${field}</label>
+                    ${isLong
+                        ? `<textarea class="form-input form-textarea" data-section-field="${field}" rows="3">${value || ''}</textarea>`
+                        : `<input type="text" class="form-input" data-section-field="${field}" value="${String(value || '').replace(/"/g, '&quot;')}">`
+                    }
+                </div>
+            `;
+        }).join('');
+
+        this._showModal('section-edit-modal');
+    }
+
+    async saveLandingSection() {
+        const key = this.editingSectionKey;
+        if (!key) return;
+
+        const fields = document.querySelectorAll('[data-section-field]');
+        const content = {};
+        fields.forEach(f => { content[f.dataset.sectionField] = f.value; });
+
+        try {
+            const { error } = await this.supabase.from('landing_content')
+                .upsert({ section_key: key, content, updated_at: new Date().toISOString() }, { onConflict: 'section_key' });
+            if (error) throw error;
+
+            this._hideModal('section-edit-modal');
+            this.showToast(`Section "${key}" saved`, 'success');
+            this.landingSections[key] = content;
+            this._renderLandingSections();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    // --- Landing Features ---
+
+    _renderLandingFeatures() {
+        const container = document.getElementById('landing-features-container');
+        if (!container) return;
+
+        if (this.landingFeatures.length === 0) {
+            container.innerHTML = '<p class="text-muted">No features yet</p>';
+            return;
+        }
+
+        container.innerHTML = this.landingFeatures.map(f => `
+            <div class="prompt-card ${f.is_active ? '' : 'inactive'}" style="margin-bottom: 12px;">
+                <div class="prompt-card-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 28px;">${f.icon}</span>
+                        <div>
+                            <h3 class="prompt-key" style="margin: 0;">${f.title}</h3>
+                            <span class="admin-badge">Order: ${f.sort_order}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="dashboard.editLandingFeature('${f.id}')">✏️</button>
+                        <button class="btn btn-ghost btn-sm" onclick="dashboard.deleteLandingFeature('${f.id}')">🗑️</button>
+                    </div>
+                </div>
+                <p class="text-muted" style="margin: 0; font-size: 13px;">${f.description}</p>
+            </div>
+        `).join('');
+    }
+
+    showAddFeatureModal() {
+        document.getElementById('edit-feature-id').value = '';
+        document.getElementById('edit-feature-icon').value = '⭐';
+        document.getElementById('edit-feature-title').value = '';
+        document.getElementById('edit-feature-desc').value = '';
+        document.getElementById('edit-feature-sort').value = this.landingFeatures.length + 1;
+        document.getElementById('feature-modal-title').textContent = 'Add Feature';
+        this._showModal('feature-edit-modal');
+    }
+
+    editLandingFeature(id) {
+        const f = this.landingFeatures.find(x => x.id === id);
+        if (!f) return;
+        document.getElementById('edit-feature-id').value = f.id;
+        document.getElementById('edit-feature-icon').value = f.icon;
+        document.getElementById('edit-feature-title').value = f.title;
+        document.getElementById('edit-feature-desc').value = f.description;
+        document.getElementById('edit-feature-sort').value = f.sort_order;
+        document.getElementById('feature-modal-title').textContent = `Edit: ${f.title}`;
+        this._showModal('feature-edit-modal');
+    }
+
+    async saveLandingFeature() {
+        const id = document.getElementById('edit-feature-id').value;
+        const row = {
+            icon: document.getElementById('edit-feature-icon').value,
+            title: document.getElementById('edit-feature-title').value.trim(),
+            description: document.getElementById('edit-feature-desc').value.trim(),
+            sort_order: parseInt(document.getElementById('edit-feature-sort').value) || 0,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+        };
+        if (!row.title) { this.showToast('Title required', 'error'); return; }
+
+        try {
+            if (id) {
+                const { error } = await this.supabase.from('landing_features').update(row).eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await this.supabase.from('landing_features').insert(row);
+                if (error) throw error;
+            }
+            this._hideModal('feature-edit-modal');
+            this.showToast('Feature saved', 'success');
+            await this.loadLanding();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    async deleteLandingFeature(id) {
+        if (!confirm('Delete this feature?')) return;
+        try {
+            const { error } = await this.supabase.from('landing_features').delete().eq('id', id);
+            if (error) throw error;
+            this.showToast('Feature deleted', 'success');
+            await this.loadLanding();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    // --- Landing Testimonials ---
+
+    _renderLandingTestimonials() {
+        const container = document.getElementById('landing-testimonials-container');
+        if (!container) return;
+
+        if (this.landingTestimonials.length === 0) {
+            container.innerHTML = '<p class="text-muted">No testimonials yet</p>';
+            return;
+        }
+
+        container.innerHTML = this.landingTestimonials.map(t => {
+            const stars = '★'.repeat(t.stars) + '☆'.repeat(5 - t.stars);
+            const socials = [t.instagram_handle, t.youtube_channel, t.twitter_handle, t.tiktok_handle].filter(Boolean).join(' · ');
+            return `
+                <div class="prompt-card ${t.is_active ? '' : 'inactive'}" style="margin-bottom: 12px;">
+                    <div class="prompt-card-header">
+                        <div>
+                            <h3 class="prompt-key" style="margin: 0;">${t.author_name} ${t.is_verified ? '✓' : ''}</h3>
+                            <span class="text-muted" style="font-size: 12px;">${t.author_role} · ${stars}</span>
+                            ${t.follower_count ? `<span class="admin-badge" style="margin-left: 8px;">${t.follower_count} on ${t.follower_platform || 'Instagram'}</span>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-sm" onclick="dashboard.editLandingTestimonial('${t.id}')">✏️</button>
+                            <button class="btn btn-ghost btn-sm" onclick="dashboard.deleteLandingTestimonial('${t.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <p class="text-muted" style="margin: 4px 0; font-size: 13px; font-style: italic;">"${t.quote.substring(0, 120)}${t.quote.length > 120 ? '...' : ''}"</p>
+                    ${socials ? `<p class="text-muted" style="margin: 0; font-size: 11px;">${socials}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    showAddTestimonialModal() {
+        document.getElementById('edit-testimonial-id').value = '';
+        document.getElementById('edit-testimonial-quote').value = '';
+        document.getElementById('edit-testimonial-name').value = '';
+        document.getElementById('edit-testimonial-stars').value = '5';
+        document.getElementById('edit-testimonial-role').value = '';
+        document.getElementById('edit-testimonial-initial').value = '';
+        document.getElementById('edit-testimonial-sort').value = this.landingTestimonials.length + 1;
+        document.getElementById('edit-testimonial-image').value = '';
+        document.getElementById('edit-testimonial-ig-url').value = '';
+        document.getElementById('edit-testimonial-ig-handle').value = '';
+        document.getElementById('edit-testimonial-yt-url').value = '';
+        document.getElementById('edit-testimonial-yt-channel').value = '';
+        document.getElementById('edit-testimonial-tw-url').value = '';
+        document.getElementById('edit-testimonial-tw-handle').value = '';
+        document.getElementById('edit-testimonial-tt-url').value = '';
+        document.getElementById('edit-testimonial-tt-handle').value = '';
+        document.getElementById('edit-testimonial-li-url').value = '';
+        document.getElementById('edit-testimonial-web-url').value = '';
+        document.getElementById('edit-testimonial-followers').value = '';
+        document.getElementById('edit-testimonial-follower-platform').value = 'Instagram';
+        document.getElementById('edit-testimonial-verified').checked = false;
+        document.getElementById('edit-testimonial-featured').checked = false;
+        document.getElementById('testimonial-modal-title').textContent = 'Add Testimonial';
+        this._showModal('testimonial-edit-modal');
+    }
+
+    editLandingTestimonial(id) {
+        const t = this.landingTestimonials.find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('edit-testimonial-id').value = t.id;
+        document.getElementById('edit-testimonial-quote').value = t.quote;
+        document.getElementById('edit-testimonial-name').value = t.author_name;
+        document.getElementById('edit-testimonial-stars').value = t.stars;
+        document.getElementById('edit-testimonial-role').value = t.author_role;
+        document.getElementById('edit-testimonial-initial').value = t.author_initial;
+        document.getElementById('edit-testimonial-sort').value = t.sort_order;
+        document.getElementById('edit-testimonial-image').value = t.author_image_url || '';
+        document.getElementById('edit-testimonial-ig-url').value = t.instagram_url || '';
+        document.getElementById('edit-testimonial-ig-handle').value = t.instagram_handle || '';
+        document.getElementById('edit-testimonial-yt-url').value = t.youtube_url || '';
+        document.getElementById('edit-testimonial-yt-channel').value = t.youtube_channel || '';
+        document.getElementById('edit-testimonial-tw-url').value = t.twitter_url || '';
+        document.getElementById('edit-testimonial-tw-handle').value = t.twitter_handle || '';
+        document.getElementById('edit-testimonial-tt-url').value = t.tiktok_url || '';
+        document.getElementById('edit-testimonial-tt-handle').value = t.tiktok_handle || '';
+        document.getElementById('edit-testimonial-li-url').value = t.linkedin_url || '';
+        document.getElementById('edit-testimonial-web-url').value = t.website_url || '';
+        document.getElementById('edit-testimonial-followers').value = t.follower_count || '';
+        document.getElementById('edit-testimonial-follower-platform').value = t.follower_platform || 'Instagram';
+        document.getElementById('edit-testimonial-verified').checked = !!t.is_verified;
+        document.getElementById('edit-testimonial-featured').checked = !!t.is_featured;
+        document.getElementById('testimonial-modal-title').textContent = `Edit: ${t.author_name}`;
+        this._showModal('testimonial-edit-modal');
+    }
+
+    async saveLandingTestimonial() {
+        const id = document.getElementById('edit-testimonial-id').value;
+        const v = (sel) => document.getElementById(sel).value.trim();
+        const row = {
+            quote: v('edit-testimonial-quote'),
+            author_name: v('edit-testimonial-name'),
+            stars: parseInt(document.getElementById('edit-testimonial-stars').value) || 5,
+            author_role: v('edit-testimonial-role'),
+            author_initial: v('edit-testimonial-initial') || v('edit-testimonial-name').charAt(0),
+            sort_order: parseInt(document.getElementById('edit-testimonial-sort').value) || 0,
+            author_image_url: v('edit-testimonial-image') || null,
+            instagram_url: v('edit-testimonial-ig-url') || null,
+            instagram_handle: v('edit-testimonial-ig-handle') || null,
+            youtube_url: v('edit-testimonial-yt-url') || null,
+            youtube_channel: v('edit-testimonial-yt-channel') || null,
+            twitter_url: v('edit-testimonial-tw-url') || null,
+            twitter_handle: v('edit-testimonial-tw-handle') || null,
+            tiktok_url: v('edit-testimonial-tt-url') || null,
+            tiktok_handle: v('edit-testimonial-tt-handle') || null,
+            linkedin_url: v('edit-testimonial-li-url') || null,
+            website_url: v('edit-testimonial-web-url') || null,
+            follower_count: v('edit-testimonial-followers') || null,
+            follower_platform: v('edit-testimonial-follower-platform') || 'Instagram',
+            is_verified: document.getElementById('edit-testimonial-verified').checked,
+            is_featured: document.getElementById('edit-testimonial-featured').checked,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+        };
+        if (!row.quote || !row.author_name) { this.showToast('Quote and name required', 'error'); return; }
+
+        try {
+            if (id) {
+                const { error } = await this.supabase.from('landing_testimonials').update(row).eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await this.supabase.from('landing_testimonials').insert(row);
+                if (error) throw error;
+            }
+            this._hideModal('testimonial-edit-modal');
+            this.showToast('Testimonial saved', 'success');
+            await this.loadLanding();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    async deleteLandingTestimonial(id) {
+        if (!confirm('Delete this testimonial?')) return;
+        try {
+            const { error } = await this.supabase.from('landing_testimonials').delete().eq('id', id);
+            if (error) throw error;
+            this.showToast('Testimonial deleted', 'success');
+            await this.loadLanding();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
         }
     }
 
