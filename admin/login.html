@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Confident Creator</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="admin-login-page">
+        <div class="admin-login-card animate-slideUp">
+            <!-- Header -->
+            <div class="admin-login-header">
+                <div class="lock-icon">🔒</div>
+                <h1>Admin Panel</h1>
+                <p>Confident Creator Configuration</p>
+            </div>
+
+            <!-- Error/Success Alerts -->
+            <div id="login-error" class="alert alert-error hidden"></div>
+
+            <!-- Login Form -->
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="admin@confidentcreator.com"
+                        required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">
+                    <span class="btn-text">Sign In as Admin</span>
+                    <span class="btn-loader loading-spinner hidden"></span>
+                </button>
+            </form>
+
+            <div class="text-center mt-lg">
+                <a href="../index.html" style="font-size: var(--font-size-sm); color: var(--text-muted);">
+                    ← Back to main site
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            initSupabase();
+            adminAuth.init();
+
+            // Check if already admin — redirect to dashboard
+            await adminAuth.redirectIfAdmin();
+
+            // Show error from redirect if present
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('error') === 'not_admin') {
+                showError('This account does not have admin access.');
+            }
+
+            // Handle form submit
+            document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const btn = document.getElementById('login-btn');
+                const btnText = btn.querySelector('.btn-text');
+                const btnLoader = btn.querySelector('.btn-loader');
+
+                btn.disabled = true;
+                btnText.textContent = 'Verifying...';
+                btnLoader.classList.remove('hidden');
+
+                const result = await adminAuth.signIn(email, password);
+
+                if (result.success) {
+                    btnText.textContent = 'Redirecting...';
+                    window.location.href = 'index.html';
+                } else {
+                    showError(result.error);
+                    btn.disabled = false;
+                    btnText.textContent = 'Sign In as Admin';
+                    btnLoader.classList.add('hidden');
+                }
+            });
+        });
+
+        function showError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('login-error').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Confident Creator</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- ============================================
+             SIDEBAR
+             ============================================ -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">⚙️</div>
+                <div>
+                    <h2>Admin Panel</h2>
+                    <p class="admin-subtitle">Configuration</p>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <button class="admin-nav-item active" data-tab="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Overview</span>
+                </button>
+                <button class="admin-nav-item" data-tab="app-config">
+                    <span class="nav-icon">⚙️</span>
+                    <span>App Config</span>
+                </button>
+                <button class="admin-nav-item" data-tab="prompts">
+                    <span class="nav-icon">💬</span>
+                    <span>Prompts</span>
+                </button>
+                <button class="admin-nav-item" data-tab="flags">
+                    <span class="nav-icon">🚩</span>
+                    <span>Feature Flags</span>
+                </button>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <div class="admin-user-info">
+                    <div class="user-avatar">A</div>
+                    <div class="user-details">
+                        <span class="user-email" id="admin-email">admin</span>
+                        <span class="user-role" id="admin-role">admin</span>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-sm btn-full" id="admin-logout">
+                    🚪 Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============================================
+             MAIN CONTENT
+             ============================================ -->
+        <main class="admin-main">
+
+            <!-- ── OVERVIEW TAB ── -->
+            <div class="admin-tab-content active" id="tab-overview">
+                <div class="admin-page-header">
+                    <h1>Overview</h1>
+                    <p>Remote configuration summary</p>
+                </div>
+
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="stat-value" id="stat-config-count">—</div>
+                        <span class="stat-label">Config Entries</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-value" id="stat-prompt-count">—</div>
+                        <span class="stat-label">Prompt Templates</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-value" id="stat-flags-active">—</div>
+                        <span class="stat-label">Active Flags</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Config Categories</h3>
+                    </div>
+                    <div id="config-categories" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <span class="text-muted">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── APP CONFIG TAB ── -->
+            <div class="admin-tab-content" id="tab-app-config">
+                <div class="admin-page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1>App Config</h1>
+                        <p>Key-value settings for the entire application</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="dashboard.showAddConfigModal()">
+                        ➕ Add Config
+                    </button>
+                </div>
+
+                <div class="filter-bar" id="config-filters">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="config-table-body">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── PROMPTS TAB ── -->
+            <div class="admin-tab-content" id="tab-prompts">
+                <div class="admin-page-header">
+                    <h1>Prompt Templates</h1>
+                    <p>AI prompt templates used for script generation</p>
+                </div>
+
+                <div class="prompts-grid" id="prompts-container">
+                    <p class="text-muted">Loading...</p>
+                </div>
+            </div>
+
+            <!-- ── FLAGS TAB ── -->
+            <div class="admin-tab-content" id="tab-flags">
+                <div class="admin-page-header">
+                    <h1>Feature Flags</h1>
+                    <p>Toggle features on/off instantly</p>
+                </div>
+
+                <div class="flags-grid" id="flags-container">
+                    <p class="text-muted">Loading...</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ============================================
+         CONFIG EDIT MODAL
+         ============================================ -->
+    <div id="config-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="config-modal-title">Edit Config</h3>
+                <span class="modal-close" onclick="dashboard._hideModal('config-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="edit-config-key">Key</label>
+                    <input type="text" id="edit-config-key" class="form-input" placeholder="my_config_key">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-config-value">Value</label>
+                    <textarea id="edit-config-value" class="form-input form-textarea" rows="3"
+                        placeholder="Config value"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-config-type">Type</label>
+                        <select id="edit-config-type" class="form-input">
+                            <option value="string">string</option>
+                            <option value="int">int</option>
+                            <option value="double">double</option>
+                            <option value="bool">bool</option>
+                            <option value="json">json</option>
+                            <option value="duration">duration</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-config-category">Category</label>
+                        <input type="text" id="edit-config-category" class="form-input" placeholder="general">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-config-description">Description</label>
+                    <input type="text" id="edit-config-description" class="form-input"
+                        placeholder="Human-readable description">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('config-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.saveConfigRow()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         PROMPT EDIT MODAL
+         ============================================ -->
+    <div id="prompt-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h3 class="modal-title" id="prompt-modal-title">Edit Prompt</h3>
+                    <span class="admin-badge" id="edit-prompt-version">v1</span>
+                </div>
+                <span class="modal-close" onclick="dashboard._hideModal('prompt-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="edit-prompt-key">Prompt Key</label>
+                    <input type="text" id="edit-prompt-key" class="form-input" disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-prompt-system">System Prompt</label>
+                    <textarea id="edit-prompt-system" class="form-input form-textarea" rows="8"
+                        placeholder="System role message (optional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-prompt-user">User Prompt Template</label>
+                    <textarea id="edit-prompt-user" class="form-input form-textarea" rows="12"
+                        placeholder="User prompt with {{placeholders}}"></textarea>
+                    <span class="form-hint">Use {{placeholder}} syntax for dynamic values</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('prompt-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.savePrompt()">Save & Bump Version</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+    <script src="../js/admin-dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            initSupabase();
+            adminAuth.init();
+
+            // Auth guard — redirect if not admin
+            const isAdmin = await adminAuth.requireAdmin();
+            if (!isAdmin) return;
+
+            // Initialize dashboard
+            await dashboard.init();
+        });
+    </script>
+</body>
+
+</html>
