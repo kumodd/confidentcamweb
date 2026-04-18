@@ -55,6 +55,10 @@
                     <span class="nav-icon">🏠</span>
                     <span>Landing Page</span>
                 </button>
+                <button class="admin-nav-item" data-tab="guides">
+                    <span class="nav-icon">📖</span>
+                    <span>Creator's Guide</span>
+                </button>
             </nav>
 
             <div class="admin-sidebar-footer">
@@ -204,6 +208,21 @@
                 </div>
             </div>
 
+            <!-- ── CREATOR'S GUIDE TAB ── -->
+            <div class="admin-tab-content" id="tab-guides">
+                <div class="admin-page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1>📖 Creator's Guide</h1>
+                        <p>Manage guide chapters shown in the mobile app dashboard</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="dashboard.showAddGuideModal()">➕ Add Chapter</button>
+                </div>
+
+                <div class="prompts-grid" id="admin-guides-container">
+                    <p class="text-muted">Loading...</p>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -288,6 +307,81 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="dashboard._hideModal('prompt-edit-modal')">Cancel</button>
                 <button class="btn btn-primary" onclick="dashboard.savePrompt()">Save & Bump Version</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         GUIDE EDIT MODAL
+         ============================================ -->
+    <div id="guide-edit-modal" class="modal-backdrop admin-modal">
+        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="guide-modal-title">Edit Guide Chapter</h3>
+                <span class="modal-close" onclick="dashboard._hideModal('guide-edit-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-guide-id">
+                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Emoji</label>
+                        <input type="text" id="edit-guide-emoji" class="form-input" style="font-size: 24px; text-align: center;" placeholder="💪">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" id="edit-guide-title" class="form-input" placeholder="Overcoming Fear">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Guide Key</label>
+                    <input type="text" id="edit-guide-key" class="form-input" placeholder="overcoming_fear (auto-generated)">
+                    <span class="form-hint">Unique identifier. Auto-generated from title for new guides.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Summary</label>
+                    <input type="text" id="edit-guide-summary" class="form-input" placeholder="Short description shown in collapsed state">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content Bullets</label>
+                    <textarea id="edit-guide-content" class="form-input form-textarea" rows="6" placeholder="One bullet point per line
+Each line becomes a separate content point
+Shown when the chapter is expanded"></textarea>
+                    <span class="form-hint">Each line = one bullet point in the expanded chapter card</span>
+                </div>
+                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">YouTube Video (Optional)</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">YouTube URL</label>
+                        <input type="url" id="edit-guide-youtube-url" class="form-input" placeholder="https://youtube.com/watch?v=...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">YouTube Title</label>
+                        <input type="text" id="edit-guide-youtube-title" class="form-input" placeholder="Video title">
+                    </div>
+                </div>
+                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Action Button (Optional)</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Action Route</label>
+                        <select id="edit-guide-action-route" class="form-input">
+                            <option value="">None</option>
+                            <option value="/warmup">Warmup (/warmup)</option>
+                            <option value="/challenge">Challenge (/challenge)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Action Button Text</label>
+                        <input type="text" id="edit-guide-action-title" class="form-input" placeholder="Practice a Warmup">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" id="edit-guide-sort" class="form-input" value="1" style="width: 100px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="dashboard._hideModal('guide-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="dashboard.saveGuide()">Save</button>
             </div>
         </div>
     </div>

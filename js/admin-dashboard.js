@@ -58,6 +58,7 @@ class AdminDashboard {
             case 'prompts': this.loadPrompts(); break;
             case 'flags': this.loadFlags(); break;
             case 'landing': this.loadLanding(); break;
+            case 'guides': this.loadGuides(); break;
         }
     }
 
@@ -787,6 +788,187 @@ class AdminDashboard {
             await this.loadLanding();
         } catch (e) {
             this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    // ============================================
+    // CREATOR'S GUIDE TAB
+    // ============================================
+
+    async loadGuides() {
+        try {
+            const { data, error } = await this.supabase
+                .from('guides')
+                .select('*')
+                .order('order_index');
+            if (error) throw error;
+            this.guidesData = data || [];
+            this._renderGuides();
+        } catch (e) {
+            console.error('Failed to load guides:', e);
+            this.showToast('Failed to load guides', 'error');
+        }
+    }
+
+    _renderGuides() {
+        const container = document.getElementById('admin-guides-container');
+        if (!container) return;
+
+        if (!this.guidesData || this.guidesData.length === 0) {
+            container.innerHTML = '<p class="text-muted">No guide chapters yet. Click "Add Chapter" to create one.</p>';
+            return;
+        }
+
+        container.innerHTML = this.guidesData.map(g => {
+            const bullets = Array.isArray(g.content) ? g.content.length : 0;
+            const ytBadge = g.youtube_url ? `<span class="admin-badge" style="background: rgba(255,0,0,0.1); color: #f87171;">▶ YouTube</span>` : '';
+            const actionBadge = g.action_route ? `<span class="admin-badge">${g.action_title || g.action_route}</span>` : '';
+            return `
+                <div class="prompt-card ${g.is_active ? '' : 'inactive'}" style="margin-bottom: 12px;">
+                    <div class="prompt-card-header">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 28px;">${g.emoji}</span>
+                            <div>
+                                <h3 class="prompt-key" style="margin: 0;">Ch. ${g.order_index}: ${g.title}</h3>
+                                <span class="text-muted" style="font-size: 12px;">${g.summary}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <label class="toggle-switch small">
+                                <input type="checkbox" ${g.is_active ? 'checked' : ''}
+                                    onchange="dashboard.toggleGuideActive('${g.id}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <button class="btn btn-secondary btn-sm" onclick="dashboard.editGuide('${g.id}')">✏️</button>
+                            <button class="btn btn-ghost btn-sm" onclick="dashboard.deleteGuide('${g.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                        <span class="admin-badge">${bullets} bullets</span>
+                        <span class="admin-badge">Order: ${g.order_index}</span>
+                        ${ytBadge}
+                        ${actionBadge}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    showAddGuideModal() {
+        document.getElementById('edit-guide-id').value = '';
+        document.getElementById('edit-guide-emoji').value = '💡';
+        document.getElementById('edit-guide-title').value = '';
+        document.getElementById('edit-guide-key').value = '';
+        document.getElementById('edit-guide-key').disabled = false;
+        document.getElementById('edit-guide-summary').value = '';
+        document.getElementById('edit-guide-content').value = '';
+        document.getElementById('edit-guide-youtube-url').value = '';
+        document.getElementById('edit-guide-youtube-title').value = '';
+        document.getElementById('edit-guide-action-route').value = '';
+        document.getElementById('edit-guide-action-title').value = '';
+        document.getElementById('edit-guide-sort').value = (this.guidesData?.length || 0) + 1;
+        document.getElementById('guide-modal-title').textContent = 'Add Guide Chapter';
+
+        // Auto-generate key from title
+        const titleInput = document.getElementById('edit-guide-title');
+        const keyInput = document.getElementById('edit-guide-key');
+        titleInput.oninput = () => {
+            if (!document.getElementById('edit-guide-id').value) {
+                keyInput.value = titleInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            }
+        };
+
+        this._showModal('guide-edit-modal');
+    }
+
+    editGuide(id) {
+        const g = this.guidesData.find(x => x.id === id);
+        if (!g) return;
+        document.getElementById('edit-guide-id').value = g.id;
+        document.getElementById('edit-guide-emoji').value = g.emoji;
+        document.getElementById('edit-guide-title').value = g.title;
+        document.getElementById('edit-guide-key').value = g.guide_key;
+        document.getElementById('edit-guide-key').disabled = true;
+        document.getElementById('edit-guide-summary').value = g.summary;
+        document.getElementById('edit-guide-content').value = Array.isArray(g.content) ? g.content.join('\n') : '';
+        document.getElementById('edit-guide-youtube-url').value = g.youtube_url || '';
+        document.getElementById('edit-guide-youtube-title').value = g.youtube_title || '';
+        document.getElementById('edit-guide-action-route').value = g.action_route || '';
+        document.getElementById('edit-guide-action-title').value = g.action_title || '';
+        document.getElementById('edit-guide-sort').value = g.order_index;
+        document.getElementById('guide-modal-title').textContent = `Edit: ${g.title}`;
+        this._showModal('guide-edit-modal');
+    }
+
+    async saveGuide() {
+        const id = document.getElementById('edit-guide-id').value;
+        const v = (sel) => document.getElementById(sel).value.trim();
+
+        const contentText = v('edit-guide-content');
+        const contentArray = contentText.split('\n').map(l => l.trim()).filter(Boolean);
+
+        const row = {
+            guide_key: v('edit-guide-key'),
+            title: v('edit-guide-title'),
+            emoji: v('edit-guide-emoji'),
+            summary: v('edit-guide-summary'),
+            content: contentArray,
+            youtube_url: v('edit-guide-youtube-url') || null,
+            youtube_title: v('edit-guide-youtube-title') || null,
+            action_route: v('edit-guide-action-route') || null,
+            action_title: v('edit-guide-action-title') || null,
+            order_index: parseInt(document.getElementById('edit-guide-sort').value) || 1,
+            is_active: true,
+        };
+
+        if (!row.guide_key || !row.title) {
+            this.showToast('Key and title are required', 'error');
+            return;
+        }
+
+        try {
+            if (id) {
+                const { error } = await this.supabase.from('guides').update(row).eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await this.supabase.from('guides').insert(row);
+                if (error) throw error;
+            }
+            this._hideModal('guide-edit-modal');
+            this.showToast(`Guide "${row.title}" saved`, 'success');
+            await this.loadGuides();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    async deleteGuide(id) {
+        const g = this.guidesData?.find(x => x.id === id);
+        if (!confirm(`Delete guide "${g?.title || id}"? This cannot be undone.`)) return;
+        try {
+            const { error } = await this.supabase.from('guides').delete().eq('id', id);
+            if (error) throw error;
+            this.showToast('Guide deleted', 'success');
+            await this.loadGuides();
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+        }
+    }
+
+    async toggleGuideActive(id, isActive) {
+        try {
+            const { error } = await this.supabase.from('guides')
+                .update({ is_active: isActive })
+                .eq('id', id);
+            if (error) throw error;
+            this.showToast(`Guide ${isActive ? 'activated' : 'deactivated'}`, 'success');
+            // Update local state
+            const g = this.guidesData?.find(x => x.id === id);
+            if (g) g.is_active = isActive;
+        } catch (e) {
+            this.showToast(`Failed: ${e.message}`, 'error');
+            const input = document.querySelector(`[onchange*="${id}"]`);
+            if (input) input.checked = !isActive;
         }
     }
 
