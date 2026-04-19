@@ -256,11 +256,26 @@ async function callGenerateEdgeFunction(payload) {
     });
 
     if (error) {
-        console.error('generate-script error:', error);
-        throw new Error(error.message || 'Server proxy failed to handle OpenAI request');
+        console.error('generate-script invocation error:', error);
+
+        // Supabase wraps non-2xx responses in FunctionsHttpError.
+        // The actual error body from our Edge Function is in error.context?.body or error.message.
+        let errorMessage = 'Server proxy failed to handle OpenAI request';
+
+        // Try to extract the JSON body from the Edge Function response
+        if (error.context && typeof error.context.json === 'function') {
+            try {
+                const errBody = await error.context.json();
+                errorMessage = errBody?.error || errorMessage;
+            } catch (_) { /* ignore parse failure */ }
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
     }
 
-    if (data.error) {
+    if (data && data.error) {
         console.error('generate-script returned error payload:', data.error);
         throw new Error(data.error);
     }
