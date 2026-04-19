@@ -5,6 +5,24 @@
 let currentUser = null;
 let generatedScript = null;
 let languageOptions = [];
+let isCustomMode = false;
+
+// Sample prompt for external AI tools
+const SAMPLE_AI_PROMPT = `You are an expert video scriptwriter creating content for social media.
+
+Write a short video script about: [YOUR TOPIC HERE]
+
+TARGET AUDIENCE: [e.g., young professionals, students, parents]
+
+RULES:
+1. Write ONLY the words to be spoken aloud — no stage directions
+2. Use SHORT, punchy sentences — this is spoken word, not an essay
+3. Start with a strong HOOK that grabs attention
+4. Be conversational — use contractions, questions, direct address ("you")
+5. End with a clear call-to-action
+6. Keep it between 150–250 words
+
+OUTPUT: Return the script as plain text with a title on the first line.`;
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing AI Generator...');
@@ -39,6 +57,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupGeneratorForm();
     setupPreviewActions();
     setupWriteYourOwn();
+    setupCustomEditor();
+    setupHowToUse();
 });
 
 // ============================================
@@ -57,6 +77,24 @@ function setupLogout() {
         await authService.signOut();
         window.location.href = 'login.html';
     });
+}
+
+// ============================================
+// HOW TO USE BUTTON
+// ============================================
+
+function setupHowToUse() {
+    const btn = document.getElementById('how-to-use-btn');
+    if (!btn) return;
+
+    const videoUrl = APP_CONFIG.howToUseVideoUrl;
+    if (videoUrl) {
+        btn.href = videoUrl;
+        btn.target = '_blank';
+    } else {
+        // Hide button if no URL configured
+        btn.style.display = 'none';
+    }
 }
 
 // ============================================
@@ -239,6 +277,7 @@ function showLoadingState() {
     document.getElementById('preview-loading').classList.remove('hidden');
     document.getElementById('preview-content').classList.add('hidden');
     document.getElementById('preview-actions').classList.add('hidden');
+    document.getElementById('custom-editor').classList.add('hidden');
 }
 
 function showEmptyState() {
@@ -246,6 +285,7 @@ function showEmptyState() {
     document.getElementById('preview-loading').classList.add('hidden');
     document.getElementById('preview-content').classList.add('hidden');
     document.getElementById('preview-actions').classList.add('hidden');
+    document.getElementById('custom-editor').classList.add('hidden');
 }
 
 function showPreviewState(script) {
@@ -253,6 +293,7 @@ function showPreviewState(script) {
     document.getElementById('preview-loading').classList.add('hidden');
     document.getElementById('preview-content').classList.remove('hidden');
     document.getElementById('preview-actions').classList.remove('hidden');
+    document.getElementById('custom-editor').classList.add('hidden');
 
     // Populate content
     document.getElementById('script-title').value = script.title || '';
@@ -278,11 +319,11 @@ function updateScriptStats() {
 }
 
 // ============================================
-// PREVIEW ACTIONS
+// PREVIEW ACTIONS (for AI-generated scripts)
 // ============================================
 
 function setupPreviewActions() {
-    // Copy button
+    // Copy button — copies title + all 3 parts as one block
     document.getElementById('copy-btn').addEventListener('click', () => {
         const title = document.getElementById('script-title').value;
         const part1 = document.getElementById('script-part1').textContent;
@@ -315,7 +356,7 @@ async function saveScript() {
         part1: document.getElementById('script-part1').textContent.trim(),
         part2: document.getElementById('script-part2').textContent.trim(),
         part3: document.getElementById('script-part3').textContent.trim(),
-        prompt_template: document.querySelector('input[name="template"]:checked').value
+        prompt_template: document.querySelector('input[name="template"]:checked')?.value || 'custom'
     };
 
     if (!scriptData.part1 && !scriptData.part2 && !scriptData.part3) {
@@ -333,6 +374,210 @@ async function saveScript() {
             // Reset to empty state after successful save
             setTimeout(() => {
                 showEmptyState();
+            }, 2000);
+        } else {
+            showToast('Failed to save script', 'error');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        showToast('An error occurred', 'error');
+    } finally {
+        setButtonLoading(saveBtn, false);
+    }
+}
+
+// ============================================
+// WRITE YOUR OWN SCRIPT (Custom Mode)
+// ============================================
+
+function setupWriteYourOwn() {
+    const writeOwnBtn = document.getElementById('write-own-btn');
+    if (!writeOwnBtn) return;
+
+    writeOwnBtn.addEventListener('click', () => {
+        enterCustomMode();
+    });
+}
+
+function enterCustomMode() {
+    isCustomMode = true;
+
+    // Hide the entire AI generator form
+    const generatorForm = document.getElementById('generator-form');
+    if (generatorForm) generatorForm.classList.add('hidden');
+
+    // Show "Back to AI Generator" link + sample prompt in left panel
+    const formPanel = document.querySelector('.generator-form-panel');
+    let backLink = document.getElementById('back-to-ai-link');
+    let sampleSection = document.getElementById('sample-prompt-section');
+
+    if (!backLink) {
+        backLink = document.createElement('button');
+        backLink.id = 'back-to-ai-link';
+        backLink.className = 'btn btn-ghost';
+        backLink.innerHTML = '← Back to AI Generator';
+        backLink.style.marginBottom = '16px';
+        backLink.addEventListener('click', exitCustomMode);
+        formPanel.prepend(backLink);
+    }
+    backLink.classList.remove('hidden');
+
+    // Create sample prompt section if not exists
+    if (!sampleSection) {
+        sampleSection = document.createElement('div');
+        sampleSection.id = 'sample-prompt-section';
+        sampleSection.className = 'sample-prompt-section';
+        sampleSection.innerHTML = `
+            <h3>📎 AI Prompt for External Tools</h3>
+            <p class="prompt-desc">Copy this prompt to use with ChatGPT, Claude, or Gemini to generate your own script:</p>
+            <div class="prompt-box">
+                <pre id="sample-prompt-text">${SAMPLE_AI_PROMPT}</pre>
+                <button id="copy-prompt-btn" class="btn btn-ghost btn-sm">📋 Copy Prompt</button>
+            </div>
+        `;
+        formPanel.appendChild(sampleSection);
+
+        // Wire copy button
+        document.getElementById('copy-prompt-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(SAMPLE_AI_PROMPT).then(() => {
+                showToast('Prompt copied! Paste it into ChatGPT or any AI tool.');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        });
+    }
+    sampleSection.classList.remove('hidden');
+
+    // Update left panel header
+    const panelHeader = formPanel.querySelector('.panel-header');
+    if (panelHeader) {
+        panelHeader.querySelector('h2').textContent = '✍️ Write Your Own Script';
+        panelHeader.querySelector('p').textContent = 'Write your script directly, or use the AI prompt below with external tools.';
+    }
+
+    // Show unified custom editor in right panel, hide everything else
+    document.getElementById('preview-empty').classList.add('hidden');
+    document.getElementById('preview-loading').classList.add('hidden');
+    document.getElementById('preview-content').classList.add('hidden');
+    document.getElementById('preview-actions').classList.add('hidden');
+    document.getElementById('custom-editor').classList.remove('hidden');
+
+    // Clear custom editor
+    document.getElementById('custom-title').value = '';
+    document.getElementById('custom-body').value = '';
+    updateCustomStats();
+
+    // Focus on title
+    document.getElementById('custom-title').focus();
+
+    showToast('Start writing your script!');
+}
+
+function exitCustomMode() {
+    isCustomMode = false;
+
+    // Restore AI generator form
+    const generatorForm = document.getElementById('generator-form');
+    if (generatorForm) generatorForm.classList.remove('hidden');
+
+    // Hide back link and sample prompt
+    const backLink = document.getElementById('back-to-ai-link');
+    if (backLink) backLink.classList.add('hidden');
+
+    const sampleSection = document.getElementById('sample-prompt-section');
+    if (sampleSection) sampleSection.classList.add('hidden');
+
+    // Restore left panel header
+    const formPanel = document.querySelector('.generator-form-panel');
+    const panelHeader = formPanel.querySelector('.panel-header');
+    if (panelHeader) {
+        panelHeader.querySelector('h2').textContent = '🤖 AI Script Generator';
+        panelHeader.querySelector('p').textContent = 'Create compelling video scripts with AI assistance';
+    }
+
+    // Hide custom editor, show empty state
+    document.getElementById('custom-editor').classList.add('hidden');
+    showEmptyState();
+}
+
+// ============================================
+// CUSTOM EDITOR ACTIONS
+// ============================================
+
+function setupCustomEditor() {
+    const copyBtn = document.getElementById('copy-custom-btn');
+    const saveBtn = document.getElementById('save-custom-btn');
+    const bodyTextarea = document.getElementById('custom-body');
+
+    if (!copyBtn || !saveBtn) return;
+
+    // Copy All — includes title + body as one block
+    copyBtn.addEventListener('click', () => {
+        const title = document.getElementById('custom-title').value.trim();
+        const body = document.getElementById('custom-body').value.trim();
+
+        if (!title && !body) {
+            showToast('Nothing to copy', 'error');
+            return;
+        }
+
+        const fullScript = title ? `${title}\n\n${body}` : body;
+
+        navigator.clipboard.writeText(fullScript).then(() => {
+            showToast('Script copied to clipboard!');
+        }).catch(() => {
+            showToast('Failed to copy', 'error');
+        });
+    });
+
+    // Save Own Script
+    saveBtn.addEventListener('click', saveCustomScript);
+
+    // Update stats on typing
+    if (bodyTextarea) {
+        bodyTextarea.addEventListener('input', updateCustomStats);
+    }
+}
+
+function updateCustomStats() {
+    const body = document.getElementById('custom-body').value;
+    const words = body.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const readTime = Math.ceil(words / 150);
+
+    const statsEl = document.getElementById('custom-stats');
+    if (statsEl) {
+        statsEl.textContent = `${words} words · ~${readTime} min read`;
+    }
+}
+
+async function saveCustomScript() {
+    const saveBtn = document.getElementById('save-custom-btn');
+    const title = document.getElementById('custom-title').value.trim() || 'Untitled Script';
+    const body = document.getElementById('custom-body').value.trim();
+
+    if (!body) {
+        showToast('Cannot save empty script', 'error');
+        return;
+    }
+
+    // Store entire body as part1 (unified — no artificial split)
+    const scriptData = {
+        title: title,
+        part1: body,
+        part2: '',
+        part3: '',
+        prompt_template: 'custom'
+    };
+
+    setButtonLoading(saveBtn, true);
+
+    try {
+        const result = await scriptsService.createScript(currentUser.id, scriptData);
+
+        if (result.success) {
+            showToast('Script saved successfully! View it in My Scripts.');
+            setTimeout(() => {
+                exitCustomMode();
             }, 2000);
         } else {
             showToast('Failed to save script', 'error');
@@ -410,41 +655,3 @@ toastStyles.textContent = `
     }
 `;
 document.head.appendChild(toastStyles);
-
-// ============================================
-// WRITE YOUR OWN SCRIPT
-// ============================================
-
-function setupWriteYourOwn() {
-    const writeOwnBtn = document.getElementById('write-own-btn');
-
-    if (!writeOwnBtn) return;
-
-    writeOwnBtn.addEventListener('click', () => {
-        // Show the preview panel with empty editable content
-        document.getElementById('preview-empty').classList.add('hidden');
-        document.getElementById('preview-loading').classList.add('hidden');
-        document.getElementById('preview-content').classList.remove('hidden');
-        document.getElementById('preview-actions').classList.remove('hidden');
-
-        // Clear and focus on title
-        document.getElementById('script-title').value = '';
-        document.getElementById('script-part1').textContent = '';
-        document.getElementById('script-part2').textContent = '';
-        document.getElementById('script-part3').textContent = '';
-
-        // Set placeholder text
-        document.getElementById('script-title').placeholder = 'Enter your script title...';
-        document.getElementById('script-part1').setAttribute('data-placeholder', 'Write your hook here - grab attention immediately...');
-        document.getElementById('script-part2').setAttribute('data-placeholder', 'Write the main body of your script here...');
-        document.getElementById('script-part3').setAttribute('data-placeholder', 'Write your closing and call-to-action here...');
-
-        // Update stats
-        updateScriptStats();
-
-        // Focus on title
-        document.getElementById('script-title').focus();
-
-        showToast('Start writing your script!');
-    });
-}

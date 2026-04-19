@@ -46,6 +46,9 @@
             </ul>
 
             <div class="navbar-user">
+                <a href="#" id="how-to-use-btn" class="btn btn-ghost nav-help-btn" target="_blank" rel="noopener">
+                    🎥 How to Use
+                </a>
                 <div class="user-avatar" id="user-avatar">U</div>
                 <button class="btn btn-ghost" id="logout-btn" title="Logout">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -267,6 +270,30 @@
                             <div class="script-stats">
                                 <span id="word-count">0 words</span>
                                 <span id="read-time">~0 min read</span>
+                            </div>
+                        </div>
+
+                        <!-- Unified Custom Script Editor (hidden by default) -->
+                        <div id="custom-editor" class="custom-editor hidden">
+                            <div class="form-group">
+                                <label for="custom-title" class="form-label">Script Title</label>
+                                <input type="text" id="custom-title" class="form-input"
+                                    placeholder="Enter your script title...">
+                            </div>
+                            <div class="form-group">
+                                <label for="custom-body" class="form-label">Full Script</label>
+                                <textarea id="custom-body" class="form-input form-textarea"
+                                    placeholder="Write your entire script here — hook, body, and closing all in one place. No need to separate sections."
+                                    rows="14"></textarea>
+                            </div>
+                            <div class="custom-stats" id="custom-stats">0 words · ~0 min read</div>
+                            <div class="button-group">
+                                <button type="button" id="copy-custom-btn" class="btn btn-secondary btn-lg">
+                                    📋 Copy All
+                                </button>
+                                <button type="button" id="save-custom-btn" class="btn btn-primary btn-lg">
+                                    💾 Save Own Script
+                                </button>
                             </div>
                         </div>
                     </div>

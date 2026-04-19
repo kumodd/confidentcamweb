@@ -18,6 +18,9 @@ const APP_CONFIG = {
     // Login Method Flags
     enableQRLogin: true,      // Set to false to hide QR login tab
     enableEmailLogin: false,   // Set to false to hide email login/signup tab
+
+    // How to Use App — YouTube video URL
+    howToUseVideoUrl: '',  // Set your YouTube URL here e.g. 'https://youtu.be/xxx'
 };
 
 // Export for use in other modules

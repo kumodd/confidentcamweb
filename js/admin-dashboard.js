@@ -821,16 +821,18 @@ class AdminDashboard {
 
         container.innerHTML = this.guidesData.map(g => {
             const bullets = Array.isArray(g.content) ? g.content.length : 0;
+            const hasMd = g.markdown_body ? `<span class="admin-badge" style="background: rgba(139,92,246,0.1); color: #a78bfa;">📝 Markdown</span>` : '';
             const ytBadge = g.youtube_url ? `<span class="admin-badge" style="background: rgba(255,0,0,0.1); color: #f87171;">▶ YouTube</span>` : '';
             const actionBadge = g.action_route ? `<span class="admin-badge">${g.action_title || g.action_route}</span>` : '';
+            const colorDot = g.cover_emoji_bg ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${g.cover_emoji_bg};vertical-align:middle;margin-right:6px;"></span>` : '';
             return `
                 <div class="prompt-card ${g.is_active ? '' : 'inactive'}" style="margin-bottom: 12px;">
                     <div class="prompt-card-header">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <span style="font-size: 28px;">${g.emoji}</span>
                             <div>
-                                <h3 class="prompt-key" style="margin: 0;">Ch. ${g.order_index}: ${g.title}</h3>
-                                <span class="text-muted" style="font-size: 12px;">${g.summary}</span>
+                                <h3 class="prompt-key" style="margin: 0;">${colorDot}Ch. ${g.order_index}: ${g.title}</h3>
+                                <span class="text-muted" style="font-size: 12px;">${g.summary} · ${g.estimated_read_min || 3} min read</span>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
@@ -844,6 +846,7 @@ class AdminDashboard {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                        ${hasMd}
                         <span class="admin-badge">${bullets} bullets</span>
                         <span class="admin-badge">Order: ${g.order_index}</span>
                         ${ytBadge}
@@ -861,7 +864,10 @@ class AdminDashboard {
         document.getElementById('edit-guide-key').value = '';
         document.getElementById('edit-guide-key').disabled = false;
         document.getElementById('edit-guide-summary').value = '';
+        document.getElementById('edit-guide-markdown').value = '';
         document.getElementById('edit-guide-content').value = '';
+        document.getElementById('edit-guide-cover-color').value = '#FBBF24';
+        document.getElementById('edit-guide-read-min').value = '3';
         document.getElementById('edit-guide-youtube-url').value = '';
         document.getElementById('edit-guide-youtube-title').value = '';
         document.getElementById('edit-guide-action-route').value = '';
@@ -890,7 +896,10 @@ class AdminDashboard {
         document.getElementById('edit-guide-key').value = g.guide_key;
         document.getElementById('edit-guide-key').disabled = true;
         document.getElementById('edit-guide-summary').value = g.summary;
+        document.getElementById('edit-guide-markdown').value = g.markdown_body || '';
         document.getElementById('edit-guide-content').value = Array.isArray(g.content) ? g.content.join('\n') : '';
+        document.getElementById('edit-guide-cover-color').value = g.cover_emoji_bg || '#FBBF24';
+        document.getElementById('edit-guide-read-min').value = g.estimated_read_min || 3;
         document.getElementById('edit-guide-youtube-url').value = g.youtube_url || '';
         document.getElementById('edit-guide-youtube-title').value = g.youtube_title || '';
         document.getElementById('edit-guide-action-route').value = g.action_route || '';
@@ -904,7 +913,18 @@ class AdminDashboard {
         const id = document.getElementById('edit-guide-id').value;
         const v = (sel) => document.getElementById(sel).value.trim();
 
-        const contentText = v('edit-guide-content');
+        const markdownBody = v('edit-guide-markdown');
+        let contentText = v('edit-guide-content');
+
+        // Auto-generate legacy bullets from markdown if empty
+        if (!contentText && markdownBody) {
+            contentText = markdownBody
+                .split('\n')
+                .filter(l => l.startsWith('- ') || l.startsWith('* '))
+                .map(l => l.replace(/^[-*]\s+/, '').replace(/\*\*/g, ''))
+                .join('\n');
+        }
+
         const contentArray = contentText.split('\n').map(l => l.trim()).filter(Boolean);
 
         const row = {
@@ -913,6 +933,9 @@ class AdminDashboard {
             emoji: v('edit-guide-emoji'),
             summary: v('edit-guide-summary'),
             content: contentArray,
+            markdown_body: markdownBody || null,
+            cover_emoji_bg: v('edit-guide-cover-color') || '#FBBF24',
+            estimated_read_min: parseInt(document.getElementById('edit-guide-read-min').value) || 3,
             youtube_url: v('edit-guide-youtube-url') || null,
             youtube_title: v('edit-guide-youtube-title') || null,
             action_route: v('edit-guide-action-route') || null,

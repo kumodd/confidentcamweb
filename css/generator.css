@@ -305,6 +305,89 @@
 }
 
 /* ============================================
+   CUSTOM SCRIPT EDITOR
+   ============================================ */
+.custom-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    flex: 1;
+}
+
+.custom-editor .form-textarea {
+    min-height: 300px;
+    resize: vertical;
+    font-size: var(--font-size-md);
+    line-height: 1.7;
+}
+
+.custom-stats {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    padding: var(--space-sm) 0;
+}
+
+/* ============================================
+   SAMPLE PROMPT BOX
+   ============================================ */
+.sample-prompt-section {
+    margin-top: var(--space-xl);
+}
+
+.sample-prompt-section h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.prompt-desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+}
+
+.prompt-box {
+    position: relative;
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    padding-top: var(--space-2xl);
+    border: 1px dashed var(--border-color);
+}
+
+.prompt-box pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Inter', monospace;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.prompt-box .btn {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+}
+
+/* ============================================
+   NAV HELP BUTTON
+   ============================================ */
+.nav-help-btn {
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.nav-help-btn:hover {
+    color: var(--accent-pink);
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 1024px) {
@@ -333,5 +416,13 @@
 
     .button-group {
         flex-direction: column;
+    }
+
+    .custom-editor .form-textarea {
+        min-height: 200px;
+    }
+
+    .nav-help-btn {
+        display: none;
     }
 }

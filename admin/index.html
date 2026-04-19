@@ -342,11 +342,44 @@
                     <input type="text" id="edit-guide-summary" class="form-input" placeholder="Short description shown in collapsed state">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Content Bullets</label>
-                    <textarea id="edit-guide-content" class="form-input form-textarea" rows="6" placeholder="One bullet point per line
-Each line becomes a separate content point
-Shown when the chapter is expanded"></textarea>
-                    <span class="form-hint">Each line = one bullet point in the expanded chapter card</span>
+                    <label class="form-label">📝 Markdown Body <span style="color: var(--text-muted); font-weight: normal;">(primary content)</span></label>
+                    <textarea id="edit-guide-markdown" class="form-input form-textarea" rows="12" placeholder="## Why You Feel Fear
+
+Fear of judgment is **completely normal**. Every successful creator started with shaky hands.
+
+> &quot;Courage is not the absence of fear, but action in spite of fear.&quot;
+
+### The First 10 Videos Rule
+
+1. **Videos 1–3:** You'll hate your voice. Normal.
+2. **Videos 4–6:** You start finding your rhythm.
+
+### Practical Tips
+
+- Focus on **progress, not perfection**
+- Start by recording without posting
+- The discomfort means you're growing"></textarea>
+                    <span class="form-hint">Full markdown: ## headers, **bold**, - lists, > quotes, 1. numbered lists</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Legacy Bullets <span style="color: var(--text-muted); font-weight: normal;">(fallback for old app versions)</span></label>
+                    <textarea id="edit-guide-content" class="form-input form-textarea" rows="4" placeholder="One bullet point per line (optional — auto-generated from markdown)"></textarea>
+                    <span class="form-hint">Each line = one bullet point. Leave blank to auto-generate from markdown.</span>
+                </div>
+                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Appearance</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Cover Color</label>
+                        <input type="color" id="edit-guide-cover-color" class="form-input" value="#FBBF24" style="height: 44px; padding: 4px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Read Time (min)</label>
+                        <input type="number" id="edit-guide-read-min" class="form-input" value="3" min="1" max="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sort Order</label>
+                        <input type="number" id="edit-guide-sort" class="form-input" value="1">
+                    </div>
                 </div>
                 <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">YouTube Video (Optional)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -373,10 +406,6 @@ Shown when the chapter is expanded"></textarea>
                         <label class="form-label">Action Button Text</label>
                         <input type="text" id="edit-guide-action-title" class="form-input" placeholder="Practice a Warmup">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Sort Order</label>
-                    <input type="number" id="edit-guide-sort" class="form-input" value="1" style="width: 100px;">
                 </div>
             </div>
             <div class="modal-footer">

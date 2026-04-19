@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup UI
     setupUserInfo();
     setupLogout();
+    setupHowToUse();
 
     // Load data
     await loadScripts();
@@ -69,6 +70,23 @@ function setupLogout() {
             window.location.href = 'login.html';
         }
     });
+}
+
+// ============================================
+// HOW TO USE BUTTON
+// ============================================
+
+function setupHowToUse() {
+    const btn = document.getElementById('how-to-use-btn');
+    if (!btn) return;
+
+    const videoUrl = APP_CONFIG.howToUseVideoUrl;
+    if (videoUrl) {
+        btn.href = videoUrl;
+        btn.target = '_blank';
+    } else {
+        btn.style.display = 'none';
+    }
 }
 
 // ============================================
