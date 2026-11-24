@@ -295,13 +295,13 @@ async function initQRCode() {
         let errorMessage = 'Failed to generate QR code';
         if (result.error && result.error.includes('relation') && result.error.includes('does not exist')) {
             errorMessage = `
-                <p style="color: #EF4444; margin-bottom: 8px;">⚠️ Database Setup Required</p>
-                <p style="color: #9CA3AF; font-size: 12px;">
-                    Run <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">web_sessions_setup.sql</code> in Supabase SQL Editor
+                <p style="color: var(--error); margin-bottom: 8px; font-weight: 600;">⚠️ Database Setup Required</p>
+                <p style="color: var(--text-secondary); font-size: 12px;">
+                    Run <code style="background: var(--bg-pill); padding: 2px 6px; border-radius: 4px; color: var(--text-primary);">web_sessions_setup.sql</code> in Supabase SQL Editor
                 </p>
             `;
         } else {
-            errorMessage = `<p style="color: #EF4444;">${result.error || 'Failed to generate QR code'}</p>`;
+            errorMessage = `<p style="color: var(--error); font-weight: 500;">${result.error || 'Failed to generate QR code'}</p>`;
         }
 
         loadingDiv.innerHTML = errorMessage;
@@ -323,7 +323,7 @@ async function initQRCode() {
             text: qrData,
             width: 200,
             height: 200,
-            colorDark: '#0F0F1A',
+            colorDark: '#1B1D17',
             colorLight: '#FFFFFF',
             correctLevel: QRCode.CorrectLevel.M
         });
@@ -336,7 +336,7 @@ async function initQRCode() {
 
     } catch (error) {
         console.error('Failed to generate QR code:', error);
-        loadingDiv.innerHTML = `<p style="color: #EF4444;">Failed to generate QR code: ${error.message}</p>`;
+        loadingDiv.innerHTML = `<p style="color: var(--error);">Failed to generate QR code: ${error.message}</p>`;
     }
 }
 

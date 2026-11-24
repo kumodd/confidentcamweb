@@ -821,8 +821,8 @@ class AdminDashboard {
 
         container.innerHTML = this.guidesData.map(g => {
             const bullets = Array.isArray(g.content) ? g.content.length : 0;
-            const hasMd = g.markdown_body ? `<span class="admin-badge" style="background: rgba(139,92,246,0.1); color: #a78bfa;">📝 Markdown</span>` : '';
-            const ytBadge = g.youtube_url ? `<span class="admin-badge" style="background: rgba(255,0,0,0.1); color: #f87171;">▶ YouTube</span>` : '';
+            const hasMd = g.markdown_body ? `<span class="admin-badge" style="background: var(--bg-nav-active); color: var(--brand-primary); border-color: var(--border-pill);">📝 Markdown</span>` : '';
+            const ytBadge = g.youtube_url ? `<span class="admin-badge" style="background: var(--error-bg); color: var(--error); border-color: rgba(181,61,50,0.25);">▶ YouTube</span>` : '';
             const actionBadge = g.action_route ? `<span class="admin-badge">${g.action_title || g.action_route}</span>` : '';
             const colorDot = g.cover_emoji_bg ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${g.cover_emoji_bg};vertical-align:middle;margin-right:6px;"></span>` : '';
             return `

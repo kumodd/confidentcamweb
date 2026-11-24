@@ -10,7 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,6 +22,12 @@
 
 <body>
     <div class="admin-layout">
+        <!-- Mobile Top Bar -->
+        <div class="admin-mobile-bar">
+            <span>⚙️ Admin Panel</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="admin-menu-toggle">☰ Menu</button>
+        </div>
+
         <!-- ============================================
              SIDEBAR
              ============================================ -->
@@ -557,6 +563,17 @@ Fear of judgment is **completely normal**. Every successful creator started with
     <script src="../js/admin-dashboard.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            const menuToggle = document.getElementById('admin-menu-toggle');
+            const sidebar = document.getElementById('admin-sidebar');
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+                sidebar.querySelectorAll('.admin-nav-item').forEach(btn => {
+                    btn.addEventListener('click', () => sidebar.classList.remove('open'));
+                });
+            }
+
             initSupabase();
             adminAuth.init();
 

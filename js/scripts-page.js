@@ -436,10 +436,10 @@ toastStyles.textContent = `
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 16px 24px;
-        background: var(--bg-card);
-        border: 1px solid var(--accent-pink);
-        border-radius: var(--radius-md);
+        padding: 14px 20px;
+        background: var(--bg-input);
+        border: 1px solid var(--border-pill);
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow-lg);
         transform: translateY(100px);
         opacity: 0;

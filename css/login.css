@@ -1,10 +1,12 @@
 /* ============================================
    LOGIN PAGE STYLES
+   Warm Sage, Cream & Moss Olive Design System
    ============================================ */
 
 .login-page {
     min-height: 100vh;
     display: flex;
+    background: var(--bg-primary);
 }
 
 /* ============================================
@@ -12,7 +14,8 @@
    ============================================ */
 .login-brand-panel {
     flex: 1;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 50%, var(--bg-secondary) 100%);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,91 +27,105 @@
 .login-brand-panel::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-    animation: float 20s infinite linear;
-}
-
-@keyframes float {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    top: -20%;
+    right: -15%;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(213, 227, 212, 0.55) 0%, transparent 70%);
+    pointer-events: none;
 }
 
 .brand-content {
     position: relative;
     z-index: 1;
-    max-width: 400px;
+    max-width: 420px;
+    width: 100%;
 }
 
 .logo-wrapper {
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    margin-bottom: var(--space-xl);
+    margin-bottom: var(--space-lg);
 }
 
 .logo-icon {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-lg);
-    backdrop-filter: blur(8px);
+    background: var(--brand-primary);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
 }
 
 .brand-name {
-    font-size: var(--font-size-2xl);
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.brand-eyebrow {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-size: 11px;
     font-weight: 700;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-olive);
+    margin-bottom: 8px;
 }
 
 .brand-tagline {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.65;
     margin-bottom: var(--space-xl);
 }
 
 .feature-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: 12px;
 }
 
 .feature-item {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-md);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: var(--radius-md);
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 15px;
     transition: all var(--transition-normal);
 }
 
 .feature-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--border-color-hover);
+    background: var(--bg-input);
+    border-color: var(--border-pill);
     transform: translateX(4px);
 }
 
 .feature-icon {
-    font-size: var(--font-size-xl);
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    background: var(--bg-tile);
+    border: 1px solid var(--border-tile);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
 /* ============================================
@@ -120,12 +137,17 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-2xl);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
 }
 
 .login-container {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-2xl);
+    padding: 36px;
+    box-shadow: var(--shadow-md);
 }
 
 /* ============================================
@@ -133,11 +155,12 @@
    ============================================ */
 .login-tabs {
     display: flex;
-    gap: var(--space-sm);
+    gap: 6px;
     margin-bottom: var(--space-xl);
-    padding: var(--space-xs);
-    background: var(--bg-input);
-    border-radius: var(--radius-lg);
+    padding: 5px;
+    background: var(--bg-pill);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
 }
 
 .login-tab {
@@ -146,11 +169,12 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
-    padding: var(--space-md);
+    padding: 11px 16px;
     background: transparent;
     border: none;
-    border-radius: var(--radius-md);
-    color: var(--text-muted);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
     font-size: var(--font-size-sm);
     font-weight: 600;
     cursor: pointer;
@@ -158,17 +182,18 @@
 }
 
 .login-tab:hover {
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .login-tab.active {
-    background: var(--bg-card);
+    background: var(--bg-nav-active);
     color: var(--text-primary);
+    font-weight: 700;
     box-shadow: var(--shadow-sm);
 }
 
 .tab-icon {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
 }
 
 /* ============================================
@@ -187,15 +212,17 @@
    FORM STYLES
    ============================================ */
 .form-title {
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
-    margin-bottom: var(--space-sm);
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
     color: var(--text-primary);
 }
 
 .form-subtitle {
-    color: var(--text-muted);
-    margin-bottom: var(--space-xl);
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: var(--space-lg);
 }
 
 .form-options {
@@ -217,12 +244,13 @@
 .checkbox-label input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: var(--accent-pink);
+    accent-color: var(--brand-primary);
 }
 
 .forgot-link {
     font-size: var(--font-size-sm);
-    color: var(--accent-pink);
+    font-weight: 600;
+    color: var(--brand-primary);
 }
 
 .forgot-link:hover {
@@ -231,15 +259,15 @@
 
 .form-footer {
     text-align: center;
-    margin-top: var(--space-xl);
-    padding-top: var(--space-xl);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-lg);
     border-top: 1px solid var(--border-color);
     color: var(--text-muted);
     font-size: var(--font-size-sm);
 }
 
 .form-footer a {
-    color: var(--accent-pink);
+    color: var(--brand-primary);
     font-weight: 600;
 }
 
@@ -252,15 +280,16 @@
 
 .qr-code-wrapper {
     position: relative;
-    width: 240px;
-    height: 240px;
-    margin: var(--space-xl) auto;
-    background: white;
-    border-radius: var(--radius-lg);
+    width: 236px;
+    height: 236px;
+    margin: var(--space-lg) auto;
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .qr-loading {
@@ -268,11 +297,13 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-md);
+    padding: 16px;
 }
 
 .qr-loading p {
-    color: var(--bg-primary);
+    color: var(--text-secondary);
     font-size: var(--font-size-sm);
+    margin: 0;
 }
 
 .qr-canvas {
@@ -289,21 +320,26 @@
 }
 
 .qr-expired p {
-    color: var(--bg-primary);
+    color: var(--text-primary);
     font-weight: 600;
+    margin: 0;
 }
 
 .qr-status {
-    margin: var(--space-lg) 0;
+    margin: var(--space-md) 0;
 }
 
 .status-item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-full);
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
+    font-weight: 500;
 }
 
 .status-dot {
@@ -323,27 +359,31 @@
 
 .qr-instructions {
     text-align: left;
-    padding: var(--space-lg);
-    background: var(--bg-input);
-    border-radius: var(--radius-md);
-    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-md);
 }
 
 .qr-instructions h4 {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand-olive);
     margin-bottom: var(--space-sm);
 }
 
 .qr-instructions ol {
-    margin-left: var(--space-lg);
+    margin-left: 18px;
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
 }
 
 .qr-instructions li {
-    margin-bottom: var(--space-xs);
+    margin-bottom: 4px;
 }
 
 /* ============================================
@@ -353,6 +393,7 @@
     width: 20px;
     height: 20px;
     border-width: 2px;
+    border-top-color: #F9FAF5;
 }
 
 .btn.loading .btn-text {
@@ -379,11 +420,17 @@
 
 @media (max-width: 480px) {
     .login-form-panel {
-        padding: var(--space-lg);
+        padding: var(--space-md);
+    }
+
+    .login-container {
+        padding: 24px 20px;
+        border-radius: var(--radius-xl);
     }
 
     .login-tabs {
         flex-direction: column;
+        border-radius: var(--radius-lg);
     }
 
     .qr-code-wrapper {
@@ -392,7 +439,7 @@
     }
 
     .qr-canvas {
-        width: 160px !important;
-        height: 160px !important;
+        width: 164px !important;
+        height: 164px !important;
     }
 }

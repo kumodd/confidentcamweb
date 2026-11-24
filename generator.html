@@ -9,7 +9,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,15 +25,11 @@
         <!-- Navigation -->
         <nav class="navbar">
             <a href="dashboard.html" class="navbar-brand">
-                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
-                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
-                    <defs>
-                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
-                            <stop stop-color="#EC4899" />
-                            <stop offset="1" stop-color="#8B5CF6" />
-                        </linearGradient>
-                    </defs>
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="34" height="34" rx="10" fill="#4E592B"/>
+                    <rect x="7" y="10" width="13" height="14" rx="3.5" stroke="#F9FAF5" stroke-width="2"/>
+                    <path d="M20 14L26 11V23L20 20V14Z" stroke="#F9FAF5" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="13.5" cy="17" r="2.2" fill="#F9FAF5"/>
                 </svg>
                 <span>Confident Creator</span>
             </a>
@@ -46,12 +42,12 @@
             </ul>
 
             <div class="navbar-user">
-                <a href="#" id="how-to-use-btn" class="btn btn-ghost nav-help-btn" target="_blank" rel="noopener">
+                <a href="#" id="how-to-use-btn" class="btn btn-ghost btn-sm nav-help-btn" target="_blank" rel="noopener">
                     🎥 How to Use
                 </a>
                 <div class="user-avatar" id="user-avatar">U</div>
-                <button class="btn btn-ghost" id="logout-btn" title="Logout">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn btn-ghost btn-sm" id="logout-btn" title="Logout">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                     </svg>
                 </button>
@@ -65,8 +61,10 @@
                     <!-- Left Panel - Input Form -->
                     <div class="generator-form-panel">
                         <div class="panel-header">
-                            <h2>🤖 AI Script Generator</h2>
-                            <p>Create compelling video scripts with AI assistance</p>
+                            <div>
+                                <h2>🤖 AI Script Generator</h2>
+                                <p>Create compelling video scripts with AI assistance</p>
+                            </div>
                         </div>
 
                         <form id="generator-form" class="generator-form">
@@ -211,7 +209,7 @@
                         <div class="panel-header">
                             <h2>📝 Script Preview</h2>
                             <div id="preview-actions" class="preview-actions hidden">
-                                <button id="copy-btn" class="btn btn-ghost btn-sm">📋 Copy</button>
+                                <button id="copy-btn" class="btn btn-secondary btn-sm">📋 Copy</button>
                                 <button id="save-btn" class="btn btn-primary btn-sm">💾 Save Script</button>
                             </div>
                         </div>
@@ -300,6 +298,26 @@
                 </div>
             </div>
         </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+            <a href="dashboard.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">⊞</span>
+                <span>Home</span>
+            </a>
+            <a href="scripts.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">📋</span>
+                <span>Scripts</span>
+            </a>
+            <a href="generator.html" class="mobile-bottom-item active">
+                <span class="mobile-bottom-pill">✨</span>
+                <span>Generate</span>
+            </a>
+            <a href="teleprompter.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">📺</span>
+                <span>Prompter</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Scripts -->

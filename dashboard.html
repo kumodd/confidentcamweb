@@ -9,7 +9,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,15 +24,11 @@
         <!-- Navigation -->
         <nav class="navbar">
             <a href="dashboard.html" class="navbar-brand">
-                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="url(#g1)" stroke-width="2" fill="none" />
-                    <circle cx="24" cy="24" r="8" fill="url(#g1)" />
-                    <defs>
-                        <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44">
-                            <stop stop-color="#EC4899" />
-                            <stop offset="1" stop-color="#8B5CF6" />
-                        </linearGradient>
-                    </defs>
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="34" height="34" rx="10" fill="#4E592B"/>
+                    <rect x="7" y="10" width="13" height="14" rx="3.5" stroke="#F9FAF5" stroke-width="2"/>
+                    <path d="M20 14L26 11V23L20 20V14Z" stroke="#F9FAF5" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="13.5" cy="17" r="2.2" fill="#F9FAF5"/>
                 </svg>
                 <span>Confident Creator</span>
             </a>
@@ -45,13 +41,13 @@
             </ul>
 
             <div class="navbar-user">
-                <a href="#" id="how-to-use-btn" class="btn btn-ghost nav-help-btn" target="_blank" rel="noopener">
+                <a href="#" id="how-to-use-btn" class="btn btn-ghost btn-sm nav-help-btn" target="_blank" rel="noopener">
                     🎥 How to Use
                 </a>
                 <span id="user-email" class="user-email"></span>
                 <div class="user-avatar" id="user-avatar">U</div>
-                <button class="btn btn-ghost" id="logout-btn" title="Logout">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn btn-ghost btn-sm" id="logout-btn" title="Logout">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                     </svg>
                 </button>
@@ -64,6 +60,7 @@
                 <!-- Welcome Header -->
                 <div class="dashboard-header animate-slideUp">
                     <div>
+                        <span class="eyebrow">CREATOR STUDIO</span>
                         <h1>Welcome back, <span id="user-name">Creator</span>! 👋</h1>
                         <p>Here's an overview of your content creation progress.</p>
                     </div>
@@ -108,31 +105,43 @@
 
                 <!-- Quick Actions -->
                 <div class="section-header">
-                    <h2>Quick Actions</h2>
+                    <h2>⚡ Quick Actions</h2>
                 </div>
 
                 <div class="quick-actions animate-slideUp" style="animation-delay: 0.2s">
                     <a href="scripts.html" class="action-card">
                         <div class="action-icon">📋</div>
-                        <h3>My Scripts</h3>
-                        <p>View and manage all your scripts</p>
+                        <div class="action-body">
+                            <span class="action-eyebrow">LIBRARY</span>
+                            <h3>My Scripts</h3>
+                            <p>View and manage all your scripts</p>
+                        </div>
+                        <span class="action-chevron">&rsaquo;</span>
                     </a>
                     <a href="generator.html" class="action-card">
                         <div class="action-icon">🤖</div>
-                        <h3>AI Generator</h3>
-                        <p>Create scripts with AI assistance</p>
+                        <div class="action-body">
+                            <span class="action-eyebrow">AI STUDIO</span>
+                            <h3>AI Generator</h3>
+                            <p>Create scripts with AI assistance</p>
+                        </div>
+                        <span class="action-chevron">&rsaquo;</span>
                     </a>
                     <a href="teleprompter.html" class="action-card">
                         <div class="action-icon">📺</div>
-                        <h3>Teleprompter</h3>
-                        <p>Practice with professional teleprompter</p>
+                        <div class="action-body">
+                            <span class="action-eyebrow">RECORDING</span>
+                            <h3>Teleprompter</h3>
+                            <p>Practice with professional teleprompter</p>
+                        </div>
+                        <span class="action-chevron">&rsaquo;</span>
                     </a>
                 </div>
 
                 <!-- Recent Scripts -->
                 <div class="section-header">
-                    <h2>Recent Scripts</h2>
-                    <a href="scripts.html" class="btn btn-ghost">View All →</a>
+                    <h2>📄 Recent Scripts</h2>
+                    <a href="scripts.html" class="section-pill-link">View All &rarr;</a>
                 </div>
 
                 <div id="recent-scripts" class="scripts-list animate-slideUp" style="animation-delay: 0.3s">
@@ -154,9 +163,29 @@
         <!-- Footer -->
         <footer class="footer">
             <div class="container">
-                <p>&copy; 2024 Confident Creator. All rights reserved.</p>
+                <p>&copy; 2026 Confident Creator. All rights reserved.</p>
             </div>
         </footer>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+            <a href="dashboard.html" class="mobile-bottom-item active">
+                <span class="mobile-bottom-pill">⊞</span>
+                <span>Home</span>
+            </a>
+            <a href="scripts.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">📋</span>
+                <span>Scripts</span>
+            </a>
+            <a href="generator.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">✨</span>
+                <span>Generate</span>
+            </a>
+            <a href="teleprompter.html" class="mobile-bottom-item">
+                <span class="mobile-bottom-pill">📺</span>
+                <span>Prompter</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Scripts -->
