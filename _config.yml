@@ -1,0 +1,4 @@
+exclude:
+  - BACKEND_AUDIT.md
+  - README.md
+  - supabase

@@ -1,107 +1,185 @@
 // ============================================
 // AI GENERATOR PAGE CONTROLLER
+// End-to-end spoken-word video script generation, hook switching,
+// iterative refinement, safe markdown preview, and teleprompter handoff.
 // ============================================
 
 let currentUser = null;
 let generatedScript = null;
+let lastGenerationPayload = null;
+let savedScriptId = null;
 let languageOptions = [];
 let isCustomMode = false;
+let isFormattedPreview = false;
 
-// Sample prompt for external AI tools
-const SAMPLE_AI_PROMPT = `You are an expert video scriptwriter creating content for social media.
+const SPEAKING_WPM = 140;
+const EDGE_TIMEOUT_MS = 50000;
+
+const FALLBACK_LANGUAGES = [
+    { language_code: 'en', language_name: 'English', native_name: 'English', is_bilingual: false, primary_language: 'en', secondary_language: null },
+    { language_code: 'hinglish', language_name: 'Hinglish', native_name: 'हिंग्लिश', is_bilingual: true, primary_language: 'hi', secondary_language: 'en' },
+    { language_code: 'hi', language_name: 'Hindi', native_name: 'हिन्दी', is_bilingual: false, primary_language: 'hi', secondary_language: null },
+    { language_code: 'ta', language_name: 'Tamil', native_name: 'தமிழ்', is_bilingual: false, primary_language: 'ta', secondary_language: null },
+    { language_code: 'te', language_name: 'Telugu', native_name: 'తెలుగు', is_bilingual: false, primary_language: 'te', secondary_language: null },
+    { language_code: 'tanglish', language_name: 'Tanglish', native_name: 'தமிழிஷ்', is_bilingual: true, primary_language: 'ta', secondary_language: 'en' },
+    { language_code: 'mr', language_name: 'Marathi', native_name: 'मराठी', is_bilingual: false, primary_language: 'mr', secondary_language: null },
+    { language_code: 'bn', language_name: 'Bengali', native_name: 'বাংলা', is_bilingual: false, primary_language: 'bn', secondary_language: null },
+    { language_code: 'gu', language_name: 'Gujarati', native_name: 'ગુજરાતી', is_bilingual: false, primary_language: 'gu', secondary_language: null },
+    { language_code: 'kn', language_name: 'Kannada', native_name: 'ಕನ್ನಡ', is_bilingual: false, primary_language: 'kn', secondary_language: null },
+    { language_code: 'ml', language_name: 'Malayalam', native_name: 'മലയാളം', is_bilingual: false, primary_language: 'ml', secondary_language: null },
+    { language_code: 'pa', language_name: 'Punjabi', native_name: 'ਪੰਜਾਬੀ', is_bilingual: false, primary_language: 'pa', secondary_language: null },
+];
+
+const STARTER_PRESETS = {
+    reels_tips: {
+        template: 'tips',
+        platform: 'reels_shorts',
+        topic: '3 simple habits to stop freezing when you hit record',
+        coreMessage: 'Practice 60 seconds daily off-camera, look at the lens instead of your screen reflection, and talk like messaging one close friend.',
+        audience: 'Camera-shy beginners and Instagram Reels creators',
+        tone: 'casual',
+        length: 'short',
+        language: 'en',
+        ctaStyle: 'save_share',
+    },
+    camera_story: {
+        template: 'story',
+        platform: 'reels_shorts',
+        topic: 'How I recorded 15 awkward videos before one finally felt natural',
+        coreMessage: 'The first take always feels weird because you judge yourself mid-sentence. Shipping tiny daily reps beats waiting to feel confident.',
+        audience: 'Aspiring creators scared of posting their first video',
+        tone: 'inspiring',
+        length: 'medium',
+        language: 'en',
+        ctaStyle: 'comment',
+    },
+    tech_howto: {
+        template: 'howto',
+        platform: 'youtube',
+        topic: 'How to use AI script outlining without sounding robotic on YouTube',
+        coreMessage: 'Feed AI one concrete personal story first, generate short spoken bullet beats instead of dense essays, and trim adjectives before hitting teleprompter play.',
+        audience: 'Educators, indie founders, and tech creators',
+        tone: 'professional',
+        length: 'long',
+        language: 'en',
+        ctaStyle: 'follow',
+    },
+    product_review: {
+        template: 'review',
+        platform: 'reels_shorts',
+        topic: 'Honest 30-day review of budget clip-on wireless mic for phone videos',
+        coreMessage: 'Clear voice in noisy rooms under twenty dollars, good battery life, only real drawback is wind muff slipping outdoors.',
+        audience: 'Solo mobile video creators on a budget',
+        tone: 'casual',
+        length: 'medium',
+        language: 'en',
+        ctaStyle: 'comment',
+    },
+    myth_buster: {
+        template: 'mythbuster',
+        platform: 'linkedin',
+        topic: 'Why buying an expensive camera slows down new creators',
+        coreMessage: 'Gear adds setup friction and raises perfectionism. Clean window light plus smartphone lens audio builds consistency 10x faster.',
+        audience: 'Coaches, founders, and professionals building a personal brand',
+        tone: 'professional',
+        length: 'medium',
+        language: 'en',
+        ctaStyle: 'reflection',
+    },
+    hinglish_reel: {
+        template: 'tips',
+        platform: 'reels_shorts',
+        topic: 'Camera ke saamne hesitation kaise khatam karein in 5 minutes',
+        coreMessage: 'Perfect bolne ki koshish mat karo, sirf ek friend ko voice note samajh ke baat karo aur pehle 3 takes delete mat karo.',
+        audience: 'Young Indian creators, students, and freelancers',
+        tone: 'casual',
+        length: 'short',
+        language: 'hinglish',
+        ctaStyle: 'comment',
+    },
+};
+
+const SAMPLE_AI_PROMPT = `You are an expert spoken-word video scriptwriter for teleprompter reading.
 
 Write a short video script about: [YOUR TOPIC HERE]
-
-TARGET AUDIENCE: [e.g., young professionals, students, parents]
+PLATFORM: Instagram Reels / YouTube Shorts
+TARGET AUDIENCE: [e.g., beginners, founders, students]
+CORE TAKEAWAY: [1-2 crisp sentences you definitely want covered]
 
 RULES:
-1. Write ONLY the words to be spoken aloud — no stage directions
-2. Use SHORT, punchy sentences — this is spoken word, not an essay
-3. Start with a strong HOOK that grabs attention
-4. Be conversational — use contractions, questions, direct address ("you")
-5. End with a clear call-to-action
-6. Keep it between 150–250 words
+1. Write ONLY the exact words to speak aloud — no stage directions like [Pause], no labels, no emojis, no hashtags, no code blocks
+2. Use SHORT, breathable phrases (6-14 words) and double line breaks between beats
+3. Start with a strong HOOK (no "Hello everyone" or "In this video")
+4. Use contractions, plain spoken numbers, and direct address ("you")
+5. End with one clear conversational call-to-action
+6. Keep total words matched to video duration (~140 words per minute)
 
-OUTPUT: Return the script as plain text with a title on the first line.`;
+OUTPUT: Return clean Title, Hook, Body, and Close ready for a teleprompter.`;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initializing AI Generator...');
-
-    // Initialize services
     initSupabase();
     authService.init();
     scriptsService.init();
 
-    // Check authentication
     const authenticated = await authService.requireAuth();
     if (!authenticated) return;
 
-    // Get current user from authService
     currentUser = authService.currentUser;
-    if (!currentUser) {
-        console.error('No user found after auth check');
-        return;
-    }
+    if (!currentUser) return;
 
-    console.log('✅ Generator loaded for user:', currentUser.id);
+    await Promise.all([
+        loadLanguageOptions(),
+        applyUserLanguagePreference(),
+    ]);
 
-    // Load language options
-    await loadLanguageOptions();
-
-    // Setup UI
     setupUserInfo();
     setupLogout();
+    setupQuickPresets();
     setupTemplateSelection();
+    setupPlatformSelection();
+    setupLanguageSelection();
     setupToneSelection();
     setupLengthSelection();
     setupGeneratorForm();
     setupPreviewActions();
+    setupRefineActions();
     setupWriteYourOwn();
     setupCustomEditor();
     setupHowToUse();
 });
 
 // ============================================
-// UI SETUP
+// UI SETUP & USER PREFERENCES
 // ============================================
 
 function setupUserInfo() {
     const avatarEl = document.getElementById('user-avatar');
     const displayName = currentUser.user_metadata?.display_name ||
         currentUser.email?.split('@')[0] || 'U';
-    avatarEl.textContent = displayName.charAt(0).toUpperCase();
+    if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 }
 
 function setupLogout() {
-    document.getElementById('logout-btn').addEventListener('click', async () => {
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
         await authService.signOut();
         window.location.href = 'login.html';
     });
 }
 
-// ============================================
-// HOW TO USE BUTTON
-// ============================================
-
 function setupHowToUse() {
     const btn = document.getElementById('how-to-use-btn');
     if (!btn) return;
-
     const videoUrl = APP_CONFIG.howToUseVideoUrl;
     if (videoUrl) {
         btn.href = videoUrl;
         btn.target = '_blank';
     } else {
-        // Hide button if no URL configured
         btn.style.display = 'none';
     }
 }
 
-// ============================================
-// LANGUAGE OPTIONS
-// ============================================
-
 async function loadLanguageOptions() {
+    languageOptions = FALLBACK_LANGUAGES;
     try {
         const supabase = getSupabase();
         const { data, error } = await supabase
@@ -110,22 +188,113 @@ async function loadLanguageOptions() {
             .eq('is_active', true)
             .order('order_index', { ascending: true });
 
-        if (error) throw error;
-
-        languageOptions = data || [];
-
-        // Populate the language dropdown
-        const languageSelect = document.getElementById('language');
-        if (languageSelect && languageOptions.length > 0) {
-            languageSelect.innerHTML = languageOptions.map(lang =>
-                `<option value="${lang.language_code}">${lang.native_name} - ${lang.language_name}</option>`
-            ).join('');
+        if (!error && Array.isArray(data) && data.length > 0) {
+            languageOptions = data;
         }
-
-        console.log('✅ Loaded', languageOptions.length, 'language options');
     } catch (error) {
-        console.error('Failed to load language options:', error);
-        // Keep default English option
+        console.warn('Using built-in language fallback:', error?.message || error);
+    }
+
+    const languageSelect = document.getElementById('language');
+    if (languageSelect && languageOptions.length > 0) {
+        languageSelect.innerHTML = '';
+        languageOptions.forEach(lang => {
+            const opt = document.createElement('option');
+            opt.value = lang.language_code;
+            const suffix = lang.language_code === 'hinglish' || lang.language_code === 'tanglish'
+                ? ' (Roman Script)'
+                : '';
+            opt.textContent = `${lang.native_name} - ${lang.language_name}${suffix}`;
+            languageSelect.appendChild(opt);
+        });
+    }
+}
+
+async function applyUserLanguagePreference() {
+    try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('language_preference')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+
+        if (!error && data?.language_preference) {
+            const langSelect = document.getElementById('language');
+            if (langSelect && Array.from(langSelect.options).some(o => o.value === data.language_preference)) {
+                langSelect.value = data.language_preference;
+                updateRomanizedToggleVisibility();
+            }
+        }
+    } catch (_) {
+        // Non-critical if user profile isn't created yet
+    }
+}
+
+function setupLanguageSelection() {
+    const langSelect = document.getElementById('language');
+    if (!langSelect) return;
+    langSelect.addEventListener('change', updateRomanizedToggleVisibility);
+    updateRomanizedToggleVisibility();
+}
+
+function updateRomanizedToggleVisibility() {
+    const langCode = document.getElementById('language')?.value || 'en';
+    const toggleGroup = document.getElementById('romanized-toggle-group');
+    if (!toggleGroup) return;
+
+    // Show Romanized toggle only for native-script Indic languages (en, hinglish, tanglish already use Latin letters)
+    const show = !['en', 'hinglish', 'tanglish'].includes(langCode);
+    toggleGroup.classList.toggle('hidden', !show);
+}
+
+// ============================================
+// QUICK PRESETS & FORM SELECTORS
+// ============================================
+
+function setupQuickPresets() {
+    const chips = document.querySelectorAll('.preset-chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const key = chip.dataset.preset;
+            const preset = STARTER_PRESETS[key];
+            if (!preset) return;
+
+            chips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+
+            selectRadioGroup('.template-option', 'template', preset.template);
+            selectRadioGroup('.platform-option', 'platform', preset.platform);
+            selectRadioGroup('.tone-chip', 'tone', preset.tone);
+            selectRadioGroup('.length-option', 'length', preset.length);
+
+            document.getElementById('topic').value = preset.topic;
+            document.getElementById('core-message').value = preset.coreMessage || '';
+            document.getElementById('audience').value = preset.audience || '';
+            document.getElementById('cta-style').value = preset.ctaStyle || 'auto';
+
+            const langSelect = document.getElementById('language');
+            if (langSelect && Array.from(langSelect.options).some(o => o.value === preset.language)) {
+                langSelect.value = preset.language;
+                updateRomanizedToggleVisibility();
+            }
+
+            showToast(`Loaded "${chip.textContent.trim()}" preset — customize or click Generate!`);
+        });
+    });
+}
+
+function selectRadioGroup(selector, inputName, value) {
+    const items = document.querySelectorAll(selector);
+    items.forEach(item => {
+        const input = item.querySelector(`input[name="${inputName}"]`);
+        if (!input) return;
+        const match = input.value === value;
+        input.checked = match;
+        item.classList.toggle('active', match);
+    });
+    if (inputName === 'template') {
+        document.getElementById('custom-prompt-group')?.classList.toggle('hidden', value !== 'custom');
     }
 }
 
@@ -138,20 +307,24 @@ function setupTemplateSelection() {
             templateOptions.forEach(o => o.classList.remove('active'));
             option.classList.add('active');
             option.querySelector('input').checked = true;
+            customPromptGroup?.classList.toggle('hidden', option.dataset.template !== 'custom');
+        });
+    });
+}
 
-            // Show/hide custom prompt
-            if (option.dataset.template === 'custom') {
-                customPromptGroup.classList.remove('hidden');
-            } else {
-                customPromptGroup.classList.add('hidden');
-            }
+function setupPlatformSelection() {
+    const platformOptions = document.querySelectorAll('.platform-option');
+    platformOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            platformOptions.forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+            option.querySelector('input').checked = true;
         });
     });
 }
 
 function setupToneSelection() {
     const toneChips = document.querySelectorAll('.tone-chip');
-
     toneChips.forEach(chip => {
         chip.addEventListener('click', () => {
             toneChips.forEach(c => c.classList.remove('active'));
@@ -163,7 +336,6 @@ function setupToneSelection() {
 
 function setupLengthSelection() {
     const lengthOptions = document.querySelectorAll('.length-option');
-
     lengthOptions.forEach(option => {
         option.addEventListener('click', () => {
             lengthOptions.forEach(o => o.classList.remove('active'));
@@ -174,67 +346,105 @@ function setupLengthSelection() {
 }
 
 // ============================================
-// GENERATOR FORM
+// GENERATOR FORM & PAYLOAD ASSEMBLY
 // ============================================
 
 function setupGeneratorForm() {
     const form = document.getElementById('generator-form');
-
-    form.addEventListener('submit', async (e) => {
+    form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         await generateScript();
     });
+}
+
+function buildGenerationPayload() {
+    const template = document.querySelector('input[name="template"]:checked')?.value || 'educational';
+    const platform = document.querySelector('input[name="platform"]:checked')?.value || 'reels_shorts';
+    const topic = document.getElementById('topic').value.trim();
+    const coreMessage = document.getElementById('core-message')?.value.trim() || '';
+    const audience = document.getElementById('audience').value.trim();
+    const ctaStyle = document.getElementById('cta-style')?.value || 'auto';
+    const languageCode = document.getElementById('language').value || 'en';
+    const tone = document.querySelector('input[name="tone"]:checked')?.value || 'casual';
+    const length = document.querySelector('input[name="length"]:checked')?.value || 'medium';
+    const customPrompt = document.getElementById('custom-prompt')?.value.trim() || '';
+    const markdownMode = document.getElementById('markdown-mode')?.checked ?? true;
+    const romanizedChecked = document.getElementById('romanized-mode')?.checked ?? false;
+
+    const langInfo = languageOptions.find(l => l.language_code === languageCode) || { language_name: 'English', native_name: 'English' };
+    const languageText = langInfo.is_bilingual
+        ? `Write in ${langInfo.language_name} (${langInfo.native_name}) - a natural everyday mix of ${langInfo.primary_language} and ${langInfo.secondary_language}.`
+        : `Write the script in conversational ${langInfo.language_name} (${langInfo.native_name || 'English'}).`;
+
+    const useRomanized = !['en', 'hinglish', 'tanglish'].includes(languageCode) && romanizedChecked;
+
+    return {
+        action: 'generate',
+        template,
+        platform,
+        topic,
+        coreMessage,
+        audience,
+        ctaStyle,
+        tone,
+        length,
+        customPrompt,
+        languageCode,
+        languageText,
+        scriptStyle: useRomanized ? 'romanized' : 'spoken_natural',
+        markdownMode,
+        sessionToken: getQrSessionToken(),
+    };
+}
+
+function getQrSessionToken() {
+    try {
+        const raw = localStorage.getItem('cc_qr_auth');
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.sessionToken || undefined;
+    } catch (_) {
+        return undefined;
+    }
 }
 
 async function generateScript() {
     const generateBtn = document.getElementById('generate-btn');
     const errorDiv = document.getElementById('generator-error');
 
-    // Get form values
-    const template = document.querySelector('input[name="template"]:checked').value;
-    const topic = document.getElementById('topic').value.trim();
-    const audience = document.getElementById('audience').value.trim();
-    const language = document.getElementById('language').value;
-    const tone = document.querySelector('input[name="tone"]:checked').value;
-    const length = document.querySelector('input[name="length"]:checked').value;
-    const customPrompt = document.getElementById('custom-prompt')?.value.trim();
-    const markdownMode = document.getElementById('markdown-mode')?.checked ?? true;
-
-    // Validate
-    if (!topic) {
-        showError(errorDiv, 'Please enter a topic');
+    const payload = buildGenerationPayload();
+    if (!payload.topic || payload.topic.length < 3) {
+        showError(errorDiv, 'Please enter a clear topic (at least 3 characters).');
+        errorDiv?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+    if (payload.template === 'custom' && !payload.customPrompt) {
+        showError(errorDiv, 'Add custom instructions for the Custom template, or pick another template.');
+        errorDiv?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
     }
 
-    // Show loading state
+    savedScriptId = null;
+    updateSavedBadge(false);
+    lastGenerationPayload = payload;
+
     setButtonLoading(generateBtn, true);
     hideError(errorDiv);
-    showLoadingState();
+    showLoadingState('Crafting your spoken script...', 'Generating 3 hook angles and teleprompter breaks (~5–15s)');
 
     try {
-        // Resolve language details to pass to Edge Function
-        const langInfo = languageOptions.find(l => l.language_code === language) || { language_name: 'English' };
-        const languageText = langInfo.is_bilingual
-            ? `Write in ${langInfo.language_name} (${langInfo.native_name}) - a mix of ${langInfo.primary_language} and ${langInfo.secondary_language}. Make it sound natural.`
-            : `Write the script in ${langInfo.language_name} (${langInfo.native_name || 'English'}).`;
-
-        const scriptData = {
-            template, topic, audience, tone, length, customPrompt,
-            languageText, markdownMode
-        };
-
-        const script = await callGenerateEdgeFunction(scriptData);
-
-        if (script) {
+        const script = await callGenerateEdgeFunction(payload);
+        if (script && (script.part1 || script.part2)) {
             generatedScript = script;
             showPreviewState(script);
         } else {
-            showError(errorDiv, 'Failed to generate script. Please try again.');
+            showError(errorDiv, 'Empty script returned. Please try again.');
             showEmptyState();
         }
     } catch (error) {
         console.error('Generation error:', error);
-        showError(errorDiv, error.message || 'An unexpected error occurred');
+        const msg = error.message || 'Could not generate script. Please try again.';
+        showError(errorDiv, `${msg} — Tip: click "✍️ Write Your Own" below to copy our AI prompt or write directly for the teleprompter.`);
+        errorDiv?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         showEmptyState();
     } finally {
         setButtonLoading(generateBtn, false);
@@ -242,41 +452,33 @@ async function generateScript() {
 }
 
 // ============================================
-// EDGE FUNCTION API
+// EDGE FUNCTION API (WITH TIMEOUT)
 // ============================================
 
 async function callGenerateEdgeFunction(payload) {
-    console.log('🤖 Calling Secure Edge Function Proxy...');
-
     const supabase = getSupabase();
 
-    // Invoke the secure edge function
-    const { data, error } = await supabase.functions.invoke('generate-script', {
-        body: payload
-    });
+    const invokePromise = supabase.functions.invoke('generate-script', { body: payload });
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Generation timed out after 32 seconds. Please retry.')), EDGE_TIMEOUT_MS)
+    );
+
+    const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
 
     if (error) {
-        console.error('generate-script invocation error:', error);
-
-        // Supabase wraps non-2xx responses in FunctionsHttpError.
-        // The actual error body from our Edge Function is in error.context?.body or error.message.
-        let errorMessage = 'Server proxy failed to handle OpenAI request';
-
-        // Try to extract the JSON body from the Edge Function response
+        let errorMessage = 'Script generator proxy returned an error';
         if (error.context && typeof error.context.json === 'function') {
             try {
                 const errBody = await error.context.json();
                 errorMessage = errBody?.error || errorMessage;
-            } catch (_) { /* ignore parse failure */ }
+            } catch (_) { /* ignore */ }
         } else if (error.message) {
             errorMessage = error.message;
         }
-
         throw new Error(errorMessage);
     }
 
-    if (data && data.error) {
-        console.error('generate-script returned error payload:', data.error);
+    if (data?.error) {
         throw new Error(data.error);
     }
 
@@ -284,10 +486,12 @@ async function callGenerateEdgeFunction(payload) {
 }
 
 // ============================================
-// PREVIEW STATES
+// PREVIEW STATES, MARKDOWN PREVIEW & HOOKS
 // ============================================
 
-function showLoadingState() {
+function showLoadingState(titleText = 'Generating your script...', subtitleText = 'This may take 5–15 seconds') {
+    document.getElementById('loading-title').textContent = titleText;
+    document.getElementById('loading-subtitle').textContent = subtitleText;
     document.getElementById('preview-empty').classList.add('hidden');
     document.getElementById('preview-loading').classList.remove('hidden');
     document.getElementById('preview-content').classList.add('hidden');
@@ -310,42 +514,182 @@ function showPreviewState(script) {
     document.getElementById('preview-actions').classList.remove('hidden');
     document.getElementById('custom-editor').classList.add('hidden');
 
-    // Populate content
     document.getElementById('script-title').value = script.title || '';
-    document.getElementById('script-part1').textContent = script.part1 || '';
-    document.getElementById('script-part2').textContent = script.part2 || '';
-    document.getElementById('script-part3').textContent = script.part3 || '';
+    document.getElementById('script-part1').value = script.part1 || '';
+    document.getElementById('script-part2').value = script.part2 || '';
+    document.getElementById('script-part3').value = script.part3 || '';
 
-    // Update stats
+    renderHookAlternatives(script.hookAlternatives || [], script.part1 || '');
+    renderWarnings(script.meta?.warnings || []);
+
+    autoResizeAllPartTextareas();
+    applyFormattedViewState();
     updateScriptStats();
 }
 
+function renderWarnings(warnings) {
+    const box = document.getElementById('script-warnings');
+    if (!box) return;
+    if (!Array.isArray(warnings) || warnings.length === 0) {
+        box.classList.add('hidden');
+        box.textContent = '';
+        return;
+    }
+    box.textContent = warnings.join(' ');
+    box.classList.remove('hidden');
+}
+
+function renderHookAlternatives(hooks, activeHook) {
+    const bar = document.getElementById('hook-alternatives-bar');
+    const chipsContainer = document.getElementById('hook-alt-chips');
+    if (!bar || !chipsContainer) return;
+
+    const cleanHooks = Array.isArray(hooks) ? hooks.filter(h => h && h.trim()) : [];
+    if (cleanHooks.length <= 1) {
+        bar.classList.add('hidden');
+        chipsContainer.innerHTML = '';
+        return;
+    }
+
+    chipsContainer.innerHTML = '';
+    cleanHooks.forEach((hookText, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hook-alt-chip' + (hookText.trim() === activeHook.trim() ? ' active' : '');
+        const previewSnippet = hookText.replace(/\*\*/g, '').replace(/\s+/g, ' ').slice(0, 48);
+        btn.textContent = `Hook ${idx + 1}: ${previewSnippet}${hookText.length > 48 ? '...' : ''}`;
+        btn.title = hookText;
+
+        btn.addEventListener('click', () => {
+            document.getElementById('script-part1').value = hookText;
+            chipsContainer.querySelectorAll('.hook-alt-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            updateSavedBadge(false);
+            autoResizeTextarea(document.getElementById('script-part1'));
+            if (isFormattedPreview) renderFormattedBoxes();
+            updateScriptStats();
+        });
+
+        chipsContainer.appendChild(btn);
+    });
+
+    bar.classList.remove('hidden');
+}
+
+function autoResizeTextarea(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 84) + 'px';
+}
+
+function autoResizeAllPartTextareas() {
+    ['script-part1', 'script-part2', 'script-part3'].forEach(id => {
+        autoResizeTextarea(document.getElementById(id));
+    });
+}
+
+function safeRenderMarkdownToHtml(text) {
+    if (!text) return '';
+    // Escape raw HTML tags first so arbitrary edits can never inject unsafe markup
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({ breaks: true, gfm: true });
+        return marked.parse(escaped);
+    }
+
+    return escaped
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^- (.*)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
+
+function renderFormattedBoxes() {
+    ['script-part1', 'script-part2', 'script-part3'].forEach(id => {
+        const ta = document.getElementById(id);
+        const box = document.getElementById(`${id}-formatted`);
+        if (ta && box) {
+            box.innerHTML = safeRenderMarkdownToHtml(ta.value);
+        }
+    });
+}
+
+function applyFormattedViewState() {
+    const btn = document.getElementById('toggle-render-btn');
+    ['script-part1', 'script-part2', 'script-part3'].forEach(id => {
+        const ta = document.getElementById(id);
+        const box = document.getElementById(`${id}-formatted`);
+        if (!ta || !box) return;
+
+        if (isFormattedPreview) {
+            box.innerHTML = safeRenderMarkdownToHtml(ta.value);
+            ta.classList.add('hidden');
+            box.classList.remove('hidden');
+        } else {
+            ta.classList.remove('hidden');
+            box.classList.add('hidden');
+            autoResizeTextarea(ta);
+        }
+    });
+
+    if (btn) {
+        btn.textContent = isFormattedPreview ? '✏️ Edit Text' : '👁️ Preview';
+    }
+}
+
+function formatSpeakingTime(words) {
+    if (!words || words <= 0) return '~0s speaking';
+    const totalSec = Math.max(5, Math.round((words / SPEAKING_WPM) * 60));
+    if (totalSec < 60) return `~${totalSec}s speaking`;
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return secs > 0 ? `~${mins}m ${secs}s speaking` : `~${mins}m speaking`;
+}
+
+function countWords(str) {
+    const trimmed = (str || '').trim();
+    return trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
+}
+
 function updateScriptStats() {
-    const part1 = document.getElementById('script-part1').textContent;
-    const part2 = document.getElementById('script-part2').textContent;
-    const part3 = document.getElementById('script-part3').textContent;
+    const p1 = document.getElementById('script-part1').value;
+    const p2 = document.getElementById('script-part2').value;
+    const p3 = document.getElementById('script-part3').value;
 
-    const fullText = `${part1} ${part2} ${part3}`;
-    const words = fullText.trim().split(/\s+/).filter(w => w.length > 0).length;
-    const readTime = Math.ceil(words / 150); // ~150 words per minute speaking
+    const w1 = countWords(p1);
+    const w2 = countWords(p2);
+    const w3 = countWords(p3);
+    const total = w1 + w2 + w3;
 
-    document.getElementById('word-count').textContent = `${words} words`;
-    document.getElementById('read-time').textContent = `~${readTime} min read`;
+    document.getElementById('part1-words').textContent = `${w1}w`;
+    document.getElementById('part2-words').textContent = `${w2}w`;
+    document.getElementById('part3-words').textContent = `${w3}w`;
+
+    document.getElementById('word-count').textContent = `${total} words`;
+    document.getElementById('read-time').textContent = formatSpeakingTime(total);
 }
 
 // ============================================
-// PREVIEW ACTIONS (for AI-generated scripts)
+// PREVIEW ACTIONS & AI REFINEMENT
 // ============================================
 
 function setupPreviewActions() {
-    // Copy button — copies title + all 3 parts as one block
-    document.getElementById('copy-btn').addEventListener('click', () => {
-        const title = document.getElementById('script-title').value;
-        const part1 = document.getElementById('script-part1').textContent;
-        const part2 = document.getElementById('script-part2').textContent;
-        const part3 = document.getElementById('script-part3').textContent;
+    document.getElementById('toggle-render-btn')?.addEventListener('click', () => {
+        isFormattedPreview = !isFormattedPreview;
+        applyFormattedViewState();
+    });
 
-        const fullScript = `${title}\n\n${part1}\n\n${part2}\n\n${part3}`;
+    document.getElementById('copy-btn')?.addEventListener('click', () => {
+        const title = document.getElementById('script-title').value.trim();
+        const p1 = document.getElementById('script-part1').value.trim();
+        const p2 = document.getElementById('script-part2').value.trim();
+        const p3 = document.getElementById('script-part3').value.trim();
+        const fullScript = [title, p1, p2, p3].filter(Boolean).join('\n\n');
 
         navigator.clipboard.writeText(fullScript).then(() => {
             showToast('Script copied to clipboard!');
@@ -354,50 +698,137 @@ function setupPreviewActions() {
         });
     });
 
-    // Save button
-    document.getElementById('save-btn').addEventListener('click', saveScript);
+    document.getElementById('save-btn')?.addEventListener('click', () => saveScript(false));
+    document.getElementById('save-teleprompter-btn')?.addEventListener('click', () => saveScript(true));
 
-    // Update stats on content edit
-    ['script-part1', 'script-part2', 'script-part3'].forEach(id => {
-        document.getElementById(id).addEventListener('input', updateScriptStats);
+    ['script-title', 'script-part1', 'script-part2', 'script-part3'].forEach(id => {
+        const el = document.getElementById(id);
+        el?.addEventListener('input', () => {
+            if (el.tagName === 'TEXTAREA') autoResizeTextarea(el);
+            updateScriptStats();
+            if (savedScriptId) {
+                updateSavedBadge(false);
+            }
+        });
     });
 }
 
-async function saveScript() {
-    const saveBtn = document.getElementById('save-btn');
+function setupRefineActions() {
+    const refineChips = document.querySelectorAll('.refine-chip');
+    refineChips.forEach(chip => {
+        chip.addEventListener('click', async () => {
+            const actionKey = chip.dataset.refine;
+            if (!actionKey) return;
+
+            if (actionKey === 'regenerate') {
+                await generateScript();
+                return;
+            }
+
+            await refineCurrentScript(actionKey);
+        });
+    });
+}
+
+async function refineCurrentScript(refineInstruction) {
+    const refineChips = document.querySelectorAll('.refine-chip');
+    const errorDiv = document.getElementById('generator-error');
+    const base = lastGenerationPayload || buildGenerationPayload();
+
+    const payload = {
+        ...base,
+        action: 'refine',
+        refineInstruction,
+        existingScript: {
+            title: document.getElementById('script-title').value.trim(),
+            part1: document.getElementById('script-part1').value.trim(),
+            part2: document.getElementById('script-part2').value.trim(),
+            part3: document.getElementById('script-part3').value.trim(),
+        },
+    };
+
+    refineChips.forEach(c => { c.disabled = true; });
+    hideError(errorDiv);
+    showLoadingState('Polishing your script...', 'Refining rhythm, hook tension, and clarity (~5–12s)');
+
+    try {
+        const refined = await callGenerateEdgeFunction(payload);
+        if (refined && (refined.part1 || refined.part2)) {
+            generatedScript = refined;
+            savedScriptId = null;
+            updateSavedBadge(false);
+            showPreviewState(refined);
+            showToast('Script refined!');
+        } else {
+            showPreviewState(generatedScript);
+            showToast('Could not refine script right now', 'error');
+        }
+    } catch (error) {
+        console.error('Refine error:', error);
+        if (generatedScript) showPreviewState(generatedScript);
+        showToast(error.message || 'Refinement failed', 'error');
+    } finally {
+        refineChips.forEach(c => { c.disabled = false; });
+    }
+}
+
+function updateSavedBadge(isSaved) {
+    const badge = document.getElementById('saved-status-badge');
+    if (!badge) return;
+    badge.classList.toggle('hidden', !isSaved);
+}
+
+async function saveScript(openTeleprompterAfter = false) {
+    const targetBtn = document.getElementById(openTeleprompterAfter ? 'save-teleprompter-btn' : 'save-btn');
+    const ctx = lastGenerationPayload || buildGenerationPayload();
 
     const scriptData = {
         title: document.getElementById('script-title').value.trim() || 'Untitled Script',
-        part1: document.getElementById('script-part1').textContent.trim(),
-        part2: document.getElementById('script-part2').textContent.trim(),
-        part3: document.getElementById('script-part3').textContent.trim(),
-        prompt_template: document.querySelector('input[name="template"]:checked')?.value || 'custom'
+        part1: document.getElementById('script-part1').value.trim(),
+        part2: document.getElementById('script-part2').value.trim(),
+        part3: document.getElementById('script-part3').value.trim(),
+        prompt_template: ctx.template || 'custom',
+        questionnaire: {
+            topic: ctx.topic,
+            audience: ctx.audience,
+            message: ctx.coreMessage,
+            tone: ctx.tone,
+            length: ctx.length,
+            platform: ctx.platform,
+            language: ctx.languageCode,
+            ctaStyle: ctx.ctaStyle,
+        },
     };
 
     if (!scriptData.part1 && !scriptData.part2 && !scriptData.part3) {
-        showToast('Cannot save empty script', 'error');
+        showToast('Cannot save an empty script', 'error');
         return;
     }
 
-    setButtonLoading(saveBtn, true);
+    setButtonLoading(targetBtn, true);
 
     try {
-        const result = await scriptsService.createScript(currentUser.id, scriptData);
+        const result = savedScriptId
+            ? await scriptsService.updateScript(savedScriptId, scriptData)
+            : await scriptsService.createScript(currentUser.id, scriptData);
 
-        if (result.success) {
-            showToast('Script saved successfully! View it in My Scripts.');
-            // Reset to empty state after successful save
-            setTimeout(() => {
-                showEmptyState();
-            }, 2000);
+        if (result.success && result.script) {
+            savedScriptId = result.script.id;
+            updateSavedBadge(true);
+
+            if (openTeleprompterAfter) {
+                window.location.href = `teleprompter.html?id=${encodeURIComponent(result.script.id)}`;
+                return;
+            }
+            showToast('Script saved to My Scripts!');
         } else {
-            showToast('Failed to save script', 'error');
+            showToast(result.error || 'Failed to save script', 'error');
         }
     } catch (error) {
         console.error('Save error:', error);
-        showToast('An error occurred', 'error');
+        showToast('Failed to save script', 'error');
     } finally {
-        setButtonLoading(saveBtn, false);
+        setButtonLoading(targetBtn, false);
     }
 }
 
@@ -406,22 +837,13 @@ async function saveScript() {
 // ============================================
 
 function setupWriteYourOwn() {
-    const writeOwnBtn = document.getElementById('write-own-btn');
-    if (!writeOwnBtn) return;
-
-    writeOwnBtn.addEventListener('click', () => {
-        enterCustomMode();
-    });
+    document.getElementById('write-own-btn')?.addEventListener('click', enterCustomMode);
 }
 
 function enterCustomMode() {
     isCustomMode = true;
 
-    // Hide the entire AI generator form
-    const generatorForm = document.getElementById('generator-form');
-    if (generatorForm) generatorForm.classList.add('hidden');
-
-    // Show "Back to AI Generator" link + sample prompt in left panel
+    document.getElementById('generator-form')?.classList.add('hidden');
     const formPanel = document.querySelector('.generator-form-panel');
     let backLink = document.getElementById('back-to-ai-link');
     let sampleSection = document.getElementById('sample-prompt-section');
@@ -429,33 +851,33 @@ function enterCustomMode() {
     if (!backLink) {
         backLink = document.createElement('button');
         backLink.id = 'back-to-ai-link';
+        backLink.type = 'button';
         backLink.className = 'btn btn-ghost';
-        backLink.innerHTML = '← Back to AI Generator';
+        backLink.textContent = '← Back to AI Generator';
         backLink.style.marginBottom = '16px';
         backLink.addEventListener('click', exitCustomMode);
         formPanel.prepend(backLink);
     }
     backLink.classList.remove('hidden');
 
-    // Create sample prompt section if not exists
     if (!sampleSection) {
         sampleSection = document.createElement('div');
         sampleSection.id = 'sample-prompt-section';
         sampleSection.className = 'sample-prompt-section';
         sampleSection.innerHTML = `
             <h3>📎 AI Prompt for External Tools</h3>
-            <p class="prompt-desc">Copy this prompt to use with ChatGPT, Claude, or Gemini to generate your own script:</p>
+            <p class="prompt-desc">Copy this teleprompter-tuned prompt to use with ChatGPT, Claude, or Gemini:</p>
             <div class="prompt-box">
-                <pre id="sample-prompt-text">${SAMPLE_AI_PROMPT}</pre>
-                <button id="copy-prompt-btn" class="btn btn-ghost btn-sm">📋 Copy Prompt</button>
+                <pre id="sample-prompt-text"></pre>
+                <button type="button" id="copy-prompt-btn" class="btn btn-ghost btn-sm">📋 Copy Prompt</button>
             </div>
         `;
         formPanel.appendChild(sampleSection);
+        sampleSection.querySelector('#sample-prompt-text').textContent = SAMPLE_AI_PROMPT;
 
-        // Wire copy button
         document.getElementById('copy-prompt-btn').addEventListener('click', () => {
             navigator.clipboard.writeText(SAMPLE_AI_PROMPT).then(() => {
-                showToast('Prompt copied! Paste it into ChatGPT or any AI tool.');
+                showToast('Prompt copied!');
             }).catch(() => {
                 showToast('Failed to copy', 'error');
             });
@@ -463,81 +885,59 @@ function enterCustomMode() {
     }
     sampleSection.classList.remove('hidden');
 
-    // Update left panel header
     const panelHeader = formPanel.querySelector('.panel-header');
     if (panelHeader) {
         panelHeader.querySelector('h2').textContent = '✍️ Write Your Own Script';
-        panelHeader.querySelector('p').textContent = 'Write your script directly, or use the AI prompt below with external tools.';
+        panelHeader.querySelector('p').textContent = 'Write your script directly, or copy our teleprompter prompt below.';
     }
 
-    // Show unified custom editor in right panel, hide everything else
     document.getElementById('preview-empty').classList.add('hidden');
     document.getElementById('preview-loading').classList.add('hidden');
     document.getElementById('preview-content').classList.add('hidden');
     document.getElementById('preview-actions').classList.add('hidden');
     document.getElementById('custom-editor').classList.remove('hidden');
 
-    // Clear custom editor
     document.getElementById('custom-title').value = '';
     document.getElementById('custom-body').value = '';
     updateCustomStats();
-
-    // Focus on title
     document.getElementById('custom-title').focus();
-
-    showToast('Start writing your script!');
 }
 
 function exitCustomMode() {
     isCustomMode = false;
 
-    // Restore AI generator form
-    const generatorForm = document.getElementById('generator-form');
-    if (generatorForm) generatorForm.classList.remove('hidden');
+    document.getElementById('generator-form')?.classList.remove('hidden');
+    document.getElementById('back-to-ai-link')?.classList.add('hidden');
+    document.getElementById('sample-prompt-section')?.classList.add('hidden');
 
-    // Hide back link and sample prompt
-    const backLink = document.getElementById('back-to-ai-link');
-    if (backLink) backLink.classList.add('hidden');
-
-    const sampleSection = document.getElementById('sample-prompt-section');
-    if (sampleSection) sampleSection.classList.add('hidden');
-
-    // Restore left panel header
     const formPanel = document.querySelector('.generator-form-panel');
     const panelHeader = formPanel.querySelector('.panel-header');
     if (panelHeader) {
         panelHeader.querySelector('h2').textContent = '🤖 AI Script Generator';
-        panelHeader.querySelector('p').textContent = 'Create compelling video scripts with AI assistance';
+        panelHeader.querySelector('p').textContent = 'Generate camera-ready spoken scripts tuned for your teleprompter';
     }
 
-    // Hide custom editor, show empty state
     document.getElementById('custom-editor').classList.add('hidden');
-    showEmptyState();
+    if (generatedScript) {
+        showPreviewState(generatedScript);
+    } else {
+        showEmptyState();
+    }
 }
-
-// ============================================
-// CUSTOM EDITOR ACTIONS
-// ============================================
 
 function setupCustomEditor() {
     const copyBtn = document.getElementById('copy-custom-btn');
     const saveBtn = document.getElementById('save-custom-btn');
     const bodyTextarea = document.getElementById('custom-body');
 
-    if (!copyBtn || !saveBtn) return;
-
-    // Copy All — includes title + body as one block
-    copyBtn.addEventListener('click', () => {
+    copyBtn?.addEventListener('click', () => {
         const title = document.getElementById('custom-title').value.trim();
         const body = document.getElementById('custom-body').value.trim();
-
         if (!title && !body) {
             showToast('Nothing to copy', 'error');
             return;
         }
-
         const fullScript = title ? `${title}\n\n${body}` : body;
-
         navigator.clipboard.writeText(fullScript).then(() => {
             showToast('Script copied to clipboard!');
         }).catch(() => {
@@ -545,23 +945,16 @@ function setupCustomEditor() {
         });
     });
 
-    // Save Own Script
-    saveBtn.addEventListener('click', saveCustomScript);
-
-    // Update stats on typing
-    if (bodyTextarea) {
-        bodyTextarea.addEventListener('input', updateCustomStats);
-    }
+    saveBtn?.addEventListener('click', saveCustomScript);
+    bodyTextarea?.addEventListener('input', updateCustomStats);
 }
 
 function updateCustomStats() {
     const body = document.getElementById('custom-body').value;
-    const words = body.trim().split(/\s+/).filter(w => w.length > 0).length;
-    const readTime = Math.ceil(words / 150);
-
+    const words = countWords(body);
     const statsEl = document.getElementById('custom-stats');
     if (statsEl) {
-        statsEl.textContent = `${words} words · ~${readTime} min read`;
+        statsEl.textContent = `${words} words · ${formatSpeakingTime(words)}`;
     }
 }
 
@@ -575,25 +968,21 @@ async function saveCustomScript() {
         return;
     }
 
-    // Store entire body as part1 (unified — no artificial split)
     const scriptData = {
-        title: title,
+        title,
         part1: body,
         part2: '',
         part3: '',
-        prompt_template: 'custom'
+        prompt_template: 'custom',
     };
 
     setButtonLoading(saveBtn, true);
 
     try {
         const result = await scriptsService.createScript(currentUser.id, scriptData);
-
         if (result.success) {
             showToast('Script saved successfully! View it in My Scripts.');
-            setTimeout(() => {
-                exitCustomMode();
-            }, 2000);
+            setTimeout(() => exitCustomMode(), 1500);
         } else {
             showToast('Failed to save script', 'error');
         }
@@ -610,15 +999,18 @@ async function saveCustomScript() {
 // ============================================
 
 function showError(element, message) {
+    if (!element) return;
     element.textContent = message;
     element.classList.remove('hidden');
 }
 
 function hideError(element) {
+    if (!element) return;
     element.classList.add('hidden');
 }
 
 function setButtonLoading(button, loading) {
+    if (!button) return;
     if (loading) {
         button.classList.add('loading');
         button.disabled = true;
@@ -631,10 +1023,17 @@ function setButtonLoading(button, loading) {
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
-    toast.innerHTML = `
-        <span class="toast-icon">${type === 'success' ? '✅' : '❌'}</span>
-        <span class="toast-message">${message}</span>
-    `;
+
+    const icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.textContent = type === 'success' ? '✅' : '❌';
+
+    const msg = document.createElement('span');
+    msg.className = 'toast-message';
+    msg.textContent = String(message || '');
+
+    toast.appendChild(icon);
+    toast.appendChild(msg);
 
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
@@ -644,7 +1043,6 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// Add toast styles
 const toastStyles = document.createElement('style');
 toastStyles.textContent = `
     .toast-notification {

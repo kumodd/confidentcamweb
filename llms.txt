@@ -1,0 +1,37 @@
+# Confident Creator
+
+> Camera confidence training and AI video creation tools helping aspiring creators, coaches, educators, and entrepreneurs go from camera-shy to camera-confident.
+
+- Website: https://confidentcreator.app/
+- Android App (Google Play): https://play.google.com/store/apps/details?id=com.confidentcam.confident_cam
+- Companion Web Portal: https://confidentcreator.app/login.html
+- Platforms: Android (Live), Web Portal (Live), iOS (Planned / Coming Soon)
+- Current Pricing: Free on Google Play and free companion Web Portal access
+
+## Core Product Overview
+- [Homepage](https://confidentcreator.app/): Overview of problems solved, workflow, verified features, app screenshots, target audience, and FAQs.
+- [About Confident Creator](https://confidentcreator.app/about-confident-creator/): Complete factual product reference covering supported platforms, 30-day challenge structure, AI script generator (12 languages incl. Hinglish and Tanglish), lens & voice teleprompter, local video privacy, and support.
+
+## Educational Guides
+- [Creator Guides Hub](https://confidentcreator.app/guides/): All 10 practical guides on camera confidence, speaking, Reels scripting, and teleprompter mastery.
+- [How to Overcome Camera Shyness](https://confidentcreator.app/guides/how-to-overcome-camera-shyness/)
+- [How to Become Confident Speaking on Camera](https://confidentcreator.app/guides/how-to-become-confident-speaking-on-camera/)
+- [How to Stop Feeling Awkward in Front of a Camera](https://confidentcreator.app/guides/how-to-stop-feeling-awkward-in-front-of-a-camera/)
+- [How to Start Making Videos When You Are Shy](https://confidentcreator.app/guides/how-to-start-making-videos-when-you-are-shy/)
+- [How to Speak Naturally in Instagram Reels](https://confidentcreator.app/guides/how-to-speak-naturally-in-instagram-reels/)
+- [How to Write a Video Script for Instagram Reels](https://confidentcreator.app/guides/how-to-write-a-video-script-for-instagram-reels/)
+- [How to Use a Teleprompter Naturally](https://confidentcreator.app/guides/how-to-use-a-teleprompter-naturally/)
+- [Camera Confidence Exercises for Beginners](https://confidentcreator.app/guides/camera-confidence-exercises-for-beginners/)
+- [How to Stop Overthinking When Recording Videos](https://confidentcreator.app/guides/how-to-stop-overthinking-when-recording-videos/)
+- [A 30-Day Camera Confidence Challenge](https://confidentcreator.app/guides/30-day-camera-confidence-challenge/)
+
+## App Comparisons
+- [Comparisons Hub](https://confidentcreator.app/compare/): Objective app and workflow comparisons.
+- [Best Camera Confidence Apps](https://confidentcreator.app/compare/best-camera-confidence-apps/)
+- [Best Teleprompter Apps for Creators](https://confidentcreator.app/compare/best-teleprompter-apps-for-creators/)
+- [Confident Creator vs Traditional Teleprompter Apps](https://confidentcreator.app/compare/confident-creator-vs-traditional-teleprompter-apps/)
+- [How to Choose a Camera Confidence App](https://confidentcreator.app/compare/how-to-choose-a-camera-confidence-app/)
+
+## Policies & Trust
+- [Privacy Policy](https://confidentcreator.app/privacy-policy.html)
+- [Terms of Service](https://confidentcreator.app/terms-of-service.html)

@@ -5,14 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Generator | Confident Creator</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Supabase -->
+    <!-- Supabase & Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
@@ -46,7 +49,7 @@
                     🎥 How to Use
                 </a>
                 <div class="user-avatar" id="user-avatar">U</div>
-                <button class="btn btn-ghost btn-sm" id="logout-btn" title="Logout">
+                <button class="btn btn-ghost btn-sm" id="logout-btn" title="Logout" type="button">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                     </svg>
@@ -63,29 +66,52 @@
                         <div class="panel-header">
                             <div>
                                 <h2>🤖 AI Script Generator</h2>
-                                <p>Create compelling video scripts with AI assistance</p>
+                                <p>Generate camera-ready spoken scripts tuned for your teleprompter</p>
                             </div>
                         </div>
 
                         <form id="generator-form" class="generator-form">
+                            <!-- Quick Use-Case Starter Presets -->
+                            <div class="form-group">
+                                <label class="form-label">Quick Starters <span class="label-optional">(optional 1-click fill)</span></label>
+                                <div class="preset-chips" id="preset-chips">
+                                    <button type="button" class="preset-chip" data-preset="reels_tips">💡 Reels Growth Tip</button>
+                                    <button type="button" class="preset-chip" data-preset="camera_story">📖 Camera Fear Story</button>
+                                    <button type="button" class="preset-chip" data-preset="tech_howto">🧑‍💻 Tool / Coding How-To</button>
+                                    <button type="button" class="preset-chip" data-preset="product_review">⭐ Honest Product Review</button>
+                                    <button type="button" class="preset-chip" data-preset="myth_buster">⚡ Career Myth Buster</button>
+                                    <button type="button" class="preset-chip" data-preset="hinglish_reel">🇮🇳 Hinglish Creator Reel</button>
+                                </div>
+                            </div>
+
                             <!-- Template Selection -->
                             <div class="form-group">
-                                <label class="form-label">Template</label>
+                                <label class="form-label">Script Format / Template</label>
                                 <div class="template-grid">
                                     <label class="template-option active" data-template="educational">
                                         <input type="radio" name="template" value="educational" checked>
                                         <span class="template-icon">📚</span>
                                         <span class="template-name">Educational</span>
                                     </label>
+                                    <label class="template-option" data-template="tips">
+                                        <input type="radio" name="template" value="tips">
+                                        <span class="template-icon">💡</span>
+                                        <span class="template-name">Tips List</span>
+                                    </label>
                                     <label class="template-option" data-template="story">
                                         <input type="radio" name="template" value="story">
                                         <span class="template-icon">📖</span>
                                         <span class="template-name">Story</span>
                                     </label>
-                                    <label class="template-option" data-template="tips">
-                                        <input type="radio" name="template" value="tips">
-                                        <span class="template-icon">💡</span>
-                                        <span class="template-name">Tips</span>
+                                    <label class="template-option" data-template="howto">
+                                        <input type="radio" name="template" value="howto">
+                                        <span class="template-icon">🛠️</span>
+                                        <span class="template-name">How-To</span>
+                                    </label>
+                                    <label class="template-option" data-template="mythbuster">
+                                        <input type="radio" name="template" value="mythbuster">
+                                        <span class="template-icon">⚡</span>
+                                        <span class="template-name">Myth Buster</span>
                                     </label>
                                     <label class="template-option" data-template="review">
                                         <input type="radio" name="template" value="review">
@@ -105,40 +131,101 @@
                                 </div>
                             </div>
 
+                            <!-- Platform Selection -->
+                            <div class="form-group">
+                                <label class="form-label">Platform & Pacing</label>
+                                <div class="platform-options">
+                                    <label class="platform-option active">
+                                        <input type="radio" name="platform" value="reels_shorts" checked>
+                                        <span class="platform-name">📱 Reels / Shorts</span>
+                                    </label>
+                                    <label class="platform-option">
+                                        <input type="radio" name="platform" value="youtube">
+                                        <span class="platform-name">▶️ YouTube</span>
+                                    </label>
+                                    <label class="platform-option">
+                                        <input type="radio" name="platform" value="linkedin">
+                                        <span class="platform-name">💼 LinkedIn</span>
+                                    </label>
+                                    <label class="platform-option">
+                                        <input type="radio" name="platform" value="general">
+                                        <span class="platform-name">🎯 Confidence / General</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Topic Input -->
                             <div class="form-group">
                                 <label for="topic" class="form-label">Topic / Subject</label>
-                                <input type="text" id="topic" class="form-input"
-                                    placeholder="e.g., 5 productivity tips for remote workers" required>
+                                <input type="text" id="topic" class="form-input" maxlength="500"
+                                    placeholder="e.g., How to stop overthinking your first 10 Reels" required>
                             </div>
 
-                            <!-- Target Audience -->
+                            <!-- Core Takeaway / Points -->
                             <div class="form-group">
-                                <label for="audience" class="form-label">Target Audience</label>
-                                <input type="text" id="audience" class="form-input"
-                                    placeholder="e.g., young professionals, students, parents">
+                                <label for="core-message" class="form-label">Core Takeaway / Key Points <span class="label-optional">(optional — makes scripts sharper)</span></label>
+                                <textarea id="core-message" class="form-input form-textarea-compact" rows="2" maxlength="500"
+                                    placeholder="e.g., Speak to one specific person instead of a crowd; use a 3-sentence hook-body-close note"></textarea>
+                            </div>
+
+                            <!-- Target Audience & CTA Goal Row -->
+                            <div class="form-row-two">
+                                <div class="form-group">
+                                    <label for="audience" class="form-label">Target Audience</label>
+                                    <input type="text" id="audience" class="form-input" maxlength="160"
+                                        placeholder="e.g., beginners, students, coaches">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cta-style" class="form-label">Ending CTA Goal</label>
+                                    <select id="cta-style" class="form-input">
+                                        <option value="auto">Auto (Best Fit)</option>
+                                        <option value="comment">Spark Comments</option>
+                                        <option value="save_share">Save &amp; Share</option>
+                                        <option value="follow">Follow / Subscribe</option>
+                                        <option value="link">Link in Bio / Caption</option>
+                                        <option value="reflection">Takeaway Only (No Hard CTA)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- Language Selection -->
                             <div class="form-group">
                                 <label for="language" class="form-label">🌐 Script Language</label>
                                 <select id="language" class="form-input">
-                                    <option value="en">English</option>
-                                    <!-- More options loaded dynamically -->
+                                    <option value="en">English - English</option>
+                                    <option value="hinglish">हिंग्लिश - Hinglish (Roman Script)</option>
+                                    <option value="hi">हिन्दी - Hindi</option>
+                                    <option value="ta">தமிழ் - Tamil</option>
+                                    <option value="te">తెలుగు - Telugu</option>
+                                    <option value="tanglish">தமிழிஷ் - Tanglish (Roman Script)</option>
+                                    <option value="mr">मराठी - Marathi</option>
+                                    <option value="bn">বাংলা - Bengali</option>
+                                    <option value="gu">ગુજરાતી - Gujarati</option>
+                                    <option value="kn">ಕನ್ನಡ - Kannada</option>
+                                    <option value="ml">മലയാളം - Malayalam</option>
+                                    <option value="pa">ਪੰਜਾਬੀ - Punjabi</option>
                                 </select>
+                                <label class="toggle-suboption hidden" id="romanized-toggle-group">
+                                    <input type="checkbox" id="romanized-mode">
+                                    <span>Write in Roman (English letters) for easier teleprompter reading</span>
+                                </label>
                             </div>
 
                             <!-- Tone Selection -->
                             <div class="form-group">
-                                <label class="form-label">Tone</label>
+                                <label class="form-label">Delivery Tone</label>
                                 <div class="tone-options">
                                     <label class="tone-chip active">
                                         <input type="radio" name="tone" value="casual" checked>
                                         <span>😊 Casual</span>
                                     </label>
                                     <label class="tone-chip">
+                                        <input type="radio" name="tone" value="calm">
+                                        <span>🌿 Calm</span>
+                                    </label>
+                                    <label class="tone-chip">
                                         <input type="radio" name="tone" value="professional">
-                                        <span>💼 Professional</span>
+                                        <span>💼 Credible</span>
                                     </label>
                                     <label class="tone-chip">
                                         <input type="radio" name="tone" value="energetic">
@@ -158,17 +245,17 @@
                                     <label class="length-option">
                                         <input type="radio" name="length" value="short">
                                         <span class="length-name">Short</span>
-                                        <span class="length-duration">30-60s</span>
+                                        <span class="length-duration">30–45s (~90w)</span>
                                     </label>
                                     <label class="length-option active">
                                         <input type="radio" name="length" value="medium" checked>
                                         <span class="length-name">Medium</span>
-                                        <span class="length-duration">1-2 min</span>
+                                        <span class="length-duration">60–90s (~175w)</span>
                                     </label>
                                     <label class="length-option">
                                         <input type="radio" name="length" value="long">
                                         <span class="length-name">Long</span>
-                                        <span class="length-duration">2-3 min</span>
+                                        <span class="length-duration">2–3 min (~310w)</span>
                                     </label>
                                 </div>
                             </div>
@@ -177,7 +264,7 @@
                             <div class="form-group hidden" id="custom-prompt-group">
                                 <label for="custom-prompt" class="form-label">Custom Instructions</label>
                                 <textarea id="custom-prompt" class="form-input form-textarea"
-                                    placeholder="Describe exactly what kind of script you want..." rows="4"></textarea>
+                                    placeholder="Describe the angle, structure, constraints, or exact phrases you want included..." rows="4"></textarea>
                             </div>
 
                             <div id="generator-error" class="alert alert-error hidden"></div>
@@ -186,9 +273,8 @@
                             <div class="form-group">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="markdown-mode" checked>
-                                    <span>📝 Enable Markdown Formatting</span>
-                                    <small class="toggle-help">Adds bold, lists, and line breaks for teleprompter
-                                        styling</small>
+                                    <span>📝 Enable Teleprompter Emphasis</span>
+                                    <small class="toggle-help">Adds bold cue words, clean bullets, and pause spacing synced for camera reading</small>
                                 </label>
                             </div>
 
@@ -209,8 +295,10 @@
                         <div class="panel-header">
                             <h2>📝 Script Preview</h2>
                             <div id="preview-actions" class="preview-actions hidden">
-                                <button id="copy-btn" class="btn btn-secondary btn-sm">📋 Copy</button>
-                                <button id="save-btn" class="btn btn-primary btn-sm">💾 Save Script</button>
+                                <button type="button" id="toggle-render-btn" class="btn btn-ghost btn-sm" title="Switch between editing text and previewing formatted teleprompter styling">👁️ Preview</button>
+                                <button type="button" id="copy-btn" class="btn btn-secondary btn-sm">📋 Copy</button>
+                                <button type="button" id="save-btn" class="btn btn-secondary btn-sm">💾 Save</button>
+                                <button type="button" id="save-teleprompter-btn" class="btn btn-primary btn-sm">📺 Teleprompter</button>
                             </div>
                         </div>
 
@@ -218,18 +306,20 @@
                         <div id="preview-empty" class="preview-empty">
                             <div class="preview-empty-icon">🎬</div>
                             <h3>Your script will appear here</h3>
-                            <p>Fill in the form and click "Generate" to create your AI-powered script.</p>
+                            <p>Pick a Quick Starter or describe your topic on the left, then click Generate to get 3 hooks plus a teleprompter-ready script.</p>
                         </div>
 
                         <!-- Loading State -->
                         <div id="preview-loading" class="preview-loading hidden">
                             <div class="loading-spinner loading-spinner-lg"></div>
-                            <h3>Generating your script...</h3>
-                            <p>This may take 10-20 seconds</p>
+                            <h3 id="loading-title">Crafting your spoken script...</h3>
+                            <p id="loading-subtitle">Generating 3 hook angles and pacing breaks (~5–15s)</p>
                         </div>
 
                         <!-- Script Preview -->
                         <div id="preview-content" class="preview-content hidden">
+                            <div id="script-warnings" class="script-warnings hidden"></div>
+
                             <!-- Title Input -->
                             <div class="form-group">
                                 <label for="script-title" class="form-label">Script Title</label>
@@ -237,37 +327,62 @@
                                     placeholder="Enter a title for your script">
                             </div>
 
+                            <!-- Hook Alternatives Bar -->
+                            <div id="hook-alternatives-bar" class="hook-alts-bar hidden">
+                                <span class="hook-alts-label">⚡ Switch Hook Angle:</span>
+                                <div id="hook-alt-chips" class="hook-alt-chips"></div>
+                            </div>
+
                             <!-- Part 1: Hook -->
                             <div class="script-part">
                                 <div class="script-part-header">
-                                    <span class="part-label">Part 1</span>
+                                    <label for="script-part1" class="part-label">Part 1</label>
                                     <span class="part-name">Hook</span>
+                                    <span class="part-words" id="part1-words">0w</span>
                                 </div>
-                                <div id="script-part1" class="script-part-content" contenteditable="true"></div>
+                                <textarea id="script-part1" class="script-part-textarea" rows="3" aria-label="Part 1: Hook script" placeholder="Opening hook..."></textarea>
+                                <div id="script-part1-formatted" class="script-part-formatted hidden"></div>
                             </div>
 
                             <!-- Part 2: Body -->
                             <div class="script-part">
                                 <div class="script-part-header">
-                                    <span class="part-label">Part 2</span>
+                                    <label for="script-part2" class="part-label">Part 2</label>
                                     <span class="part-name">Body</span>
+                                    <span class="part-words" id="part2-words">0w</span>
                                 </div>
-                                <div id="script-part2" class="script-part-content" contenteditable="true"></div>
+                                <textarea id="script-part2" class="script-part-textarea" rows="7" aria-label="Part 2: Body script" placeholder="Main spoken script..."></textarea>
+                                <div id="script-part2-formatted" class="script-part-formatted hidden"></div>
                             </div>
 
                             <!-- Part 3: Close -->
                             <div class="script-part">
                                 <div class="script-part-header">
-                                    <span class="part-label">Part 3</span>
+                                    <label for="script-part3" class="part-label">Part 3</label>
                                     <span class="part-name">Close</span>
+                                    <span class="part-words" id="part3-words">0w</span>
                                 </div>
-                                <div id="script-part3" class="script-part-content" contenteditable="true"></div>
+                                <textarea id="script-part3" class="script-part-textarea" rows="3" aria-label="Part 3: Close script" placeholder="Closing takeaway / CTA..."></textarea>
+                                <div id="script-part3-formatted" class="script-part-formatted hidden"></div>
+                            </div>
+
+                            <!-- AI Quick Refine Bar -->
+                            <div class="refine-bar" id="refine-bar">
+                                <span class="refine-label">✨ Polish with AI:</span>
+                                <div class="refine-chips">
+                                    <button type="button" class="refine-chip" data-refine="punchier_hook">⚡ Punchier Hook</button>
+                                    <button type="button" class="refine-chip" data-refine="shorter">✂️ Shorter</button>
+                                    <button type="button" class="refine-chip" data-refine="more_casual">😊 More Casual</button>
+                                    <button type="button" class="refine-chip" data-refine="add_example">📌 Add Example</button>
+                                    <button type="button" class="refine-chip" data-refine="regenerate">🔄 Regenerate</button>
+                                </div>
                             </div>
 
                             <!-- Stats -->
                             <div class="script-stats">
                                 <span id="word-count">0 words</span>
-                                <span id="read-time">~0 min read</span>
+                                <span id="read-time">~0s speaking</span>
+                                <span id="saved-status-badge" class="saved-status-badge hidden">✅ Saved</span>
                             </div>
                         </div>
 
@@ -284,7 +399,7 @@
                                     placeholder="Write your entire script here — hook, body, and closing all in one place. No need to separate sections."
                                     rows="14"></textarea>
                             </div>
-                            <div class="custom-stats" id="custom-stats">0 words · ~0 min read</div>
+                            <div class="custom-stats" id="custom-stats">0 words · ~0s speaking</div>
                             <div class="button-group">
                                 <button type="button" id="copy-custom-btn" class="btn btn-secondary btn-lg">
                                     📋 Copy All

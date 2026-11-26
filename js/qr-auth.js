@@ -144,7 +144,7 @@ class QRAuthService {
                     .from('users')
                     .select('*')
                     .eq('id', userId)
-                    .single();
+                    .maybeSingle();
 
                 if (!error && userData) {
                     userProfile = {
