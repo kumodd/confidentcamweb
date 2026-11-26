@@ -1011,6 +1011,86 @@
     color: #F6F7F0;
 }
 
+/* Disabled auto-scroll state when Voice Sync is active */
+.control-group.disabled-mode {
+    opacity: 0.38;
+}
+
+/* Word-by-word voice tracking spans */
+.teleprompter-word {
+    transition: opacity 0.22s ease, background-color 0.22s ease, color 0.22s ease;
+    border-radius: 4px;
+}
+
+.teleprompter-word.spoken {
+    opacity: 0.42;
+}
+
+.teleprompter-word.current {
+    background: rgba(184, 207, 122, 0.24);
+    box-shadow: 0 2px 0 #B8CF7A;
+}
+
+/* Scroll mode selector & voice language */
+.mode-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+}
+
+.mode-btn {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: rgba(246, 247, 240, 0.06);
+    color: #F6F7F0;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+}
+
+.mode-btn:hover {
+    border-color: rgba(246, 247, 240, 0.4);
+}
+
+.mode-btn.active {
+    border-color: #B8CF7A;
+    background: rgba(184, 207, 122, 0.18);
+    color: #F9FAF5;
+    box-shadow: 0 0 8px rgba(184, 207, 122, 0.35);
+}
+
+.mode-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.setting-hint {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: rgba(246, 247, 240, 0.55);
+}
+
+.voice-select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(246, 247, 240, 0.2);
+    background: #12140E;
+    color: #F6F7F0;
+    font-family: var(--font-family);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+.voice-select:focus {
+    border-color: #B8CF7A;
+}
+
 /* ============================================
    VOICE INDICATOR
    ============================================ */
@@ -1023,13 +1103,30 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-lg);
-    background: rgba(47, 111, 68, 0.25);
+    background: rgba(26, 40, 29, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid #64B87E;
     border-radius: var(--radius-full);
     color: #B7E4C7;
-    font-size: var(--font-size-sm);
-    animation: pulse 2s ease-in-out infinite;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
     z-index: 12;
+    max-width: 90vw;
+    white-space: nowrap;
+}
+
+.voice-heard-preview {
+    color: rgba(246, 247, 240, 0.72);
+    font-weight: 400;
+    font-style: italic;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voice-heard-preview:empty {
+    display: none;
 }
 
 .voice-dot {

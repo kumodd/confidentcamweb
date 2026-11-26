@@ -209,7 +209,7 @@
 
         <!-- Controls Bar (Bottom) -->
         <div class="teleprompter-controls-bottom">
-            <div class="control-group">
+            <div class="control-group" id="speed-control-group">
                 <button id="slower-btn" class="control-btn" title="Slower (↓)" type="button">
                     🐢
                 </button>
@@ -236,7 +236,7 @@
                 <button id="mirror-btn" class="control-btn" title="Mirror (M)" type="button">
                     🪞
                 </button>
-                <button id="voice-btn" class="control-btn" title="Voice Control (V)" type="button">
+                <button id="voice-btn" class="control-btn" title="Scroll with Voice (V)" type="button">
                     🎤
                 </button>
             </div>
@@ -250,11 +250,11 @@
                     <button id="close-shortcuts" class="control-btn" type="button">✕</button>
                 </div>
                 <div class="shortcuts-grid">
-                    <div class="shortcut-row"><kbd>Space</kbd><span>Play / Pause (or cancel countdown)</span></div>
+                    <div class="shortcut-row"><kbd>Space</kbd><span>Play / Pause (Auto or Voice Sync)</span></div>
                     <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal / Exit teleprompter</span></div>
                     <div class="shortcut-row"><kbd>R</kbd><span>Reset to Beginning</span></div>
                     <div class="shortcut-row"><kbd>M</kbd><span>Toggle Mirror Mode</span></div>
-                    <div class="shortcut-row"><kbd>V</kbd><span>Toggle Voice Control</span></div>
+                    <div class="shortcut-row"><kbd>V</kbd><span>Toggle Voice Word-Sync (Auto-scroll off)</span></div>
                     <div class="shortcut-row"><kbd>F</kbd><span>Toggle Fullscreen</span></div>
                     <div class="shortcut-row"><kbd>↑ / ↓</kbd><span>Increase / Decrease Speed</span></div>
                     <div class="shortcut-row"><kbd>← / →</kbd><span>Jump Back / Forward</span></div>
@@ -272,6 +272,36 @@
             </div>
 
             <div class="settings-content">
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <span>Scroll Mode</span>
+                        <span class="setting-value" id="scroll-mode-badge">Auto</span>
+                    </label>
+                    <div class="mode-options">
+                        <button class="mode-btn active" data-mode="auto" type="button" title="Timed auto-scroll">⏱️ Auto Scroll</button>
+                        <button class="mode-btn" data-mode="voice" type="button" title="Auto-scroll off, scrolls with words spoken">🎤 Voice Sync</button>
+                    </div>
+                    <p class="setting-hint" id="scroll-mode-hint">Scrolls continuously at set speed</p>
+                </div>
+
+                <div class="setting-group" id="voice-lang-group">
+                    <label class="setting-label" for="voice-lang">
+                        <span>Voice Language</span>
+                    </label>
+                    <select id="voice-lang" class="voice-select">
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="en-AU">English (AU)</option>
+                        <option value="en-IN">English (India)</option>
+                        <option value="es-ES">Spanish (ES)</option>
+                        <option value="fr-FR">French (FR)</option>
+                        <option value="de-DE">German (DE)</option>
+                        <option value="pt-BR">Portuguese (BR)</option>
+                        <option value="hi-IN">Hindi (IN)</option>
+                        <option value="ja-JP">Japanese (JP)</option>
+                    </select>
+                </div>
+
                 <div class="setting-group">
                     <label class="setting-label">
                         <span>Font Size</span>
@@ -363,6 +393,10 @@
 
                 <div class="setting-group setting-toggles">
                     <label class="setting-checkbox">
+                        <input type="checkbox" id="highlight-spoken" checked>
+                        <span>Highlight Spoken Words</span>
+                    </label>
+                    <label class="setting-checkbox">
                         <input type="checkbox" id="show-parts" checked>
                         <span>Show Part Labels</span>
                     </label>
@@ -385,7 +419,8 @@
         <!-- Voice Status Indicator -->
         <div id="voice-indicator" class="voice-indicator hidden">
             <span class="voice-dot"></span>
-            <span>Listening...</span>
+            <span id="voice-status-text">Voice Sync (Auto-scroll off) • Listening...</span>
+            <span id="voice-heard-preview" class="voice-heard-preview"></span>
         </div>
     </div>
 
