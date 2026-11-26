@@ -9,7 +9,8 @@
 - Current Pricing: Free on Google Play and free companion Web Portal access
 
 ## Core Product Overview
-- [Homepage](https://confidentcreator.app/): Overview of problems solved, workflow, verified features, app screenshots, target audience, and FAQs.
+- [Homepage](https://confidentcreator.app/): Overview of problems solved, workflow, verified features, app screenshots, target audience, FAQs, and an embedded free online teleprompter (no login required).
+- [Free Online Browser Teleprompter (No Login)](https://confidentcreator.app/#free-teleprompter): Instant browser teleprompter right on the homepage with sample scripts, adjustable scroll speed, font sizing, Mirror Mode, Eye-Line guide, fullscreen view, and optional Voice Sync.
 - [About Confident Creator](https://confidentcreator.app/about-confident-creator/): Complete factual product reference covering supported platforms, 30-day challenge structure, AI script generator (12 languages incl. Hinglish and Tanglish), lens & voice teleprompter, local video privacy, and support.
 
 ## Educational Guides

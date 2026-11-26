@@ -81,7 +81,14 @@
                 "url": "https://confidentcreator.app/",
                 "installUrl": "https://play.google.com/store/apps/details?id=com.confidentcam.confident_cam",
                 "downloadUrl": "https://play.google.com/store/apps/details?id=com.confidentcam.confident_cam",
-                "description": "Camera confidence training app and companion creator web portal with 3 pre-challenge warmups, a 30-day video practice challenge, AI Hook-Body-Close script generation, and a lens-aligned & voice-synced teleprompter.",
+                "description": "Camera confidence training app and companion creator web workspace with a free no-login online teleprompter (with optional Voice Sync and Mirror Mode), 3 pre-challenge warmups, a 30-day video practice challenge, and AI Hook-Body-Close script generation.",
+                "featureList": [
+                    "Free no-login browser teleprompter with Mirror Mode, countdown, and optional Voice Sync",
+                    "3 guided 60-second pre-challenge speaking warmups on Android",
+                    "30-day structured camera confidence challenge",
+                    "AI Hook-Body-Close script generator across 12 languages including Hinglish and Tanglish",
+                    "Lens-aligned mobile teleprompter with private local video recording"
+                ],
                 "author": {
                     "@id": "https://confidentcreator.app/#organization"
                 },
@@ -148,6 +155,14 @@
                             "@type": "Answer",
                             "text": "Open Settings then Web Login inside the Android app and scan the QR code on confidentcreator.app/login.html. Scripts written or generated on your computer appear immediately in your app."
                         }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Can I use the teleprompter online without logging in?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Yes. Right on the confidentcreator.app homepage, anyone can paste a script or load a sample prompt and use the free browser teleprompter immediately without creating an account—including speed, font size, mirror mode, eye-line guide, fullscreen view, and optional Voice Sync."
+                        }
                     }
                 ]
             }
@@ -172,6 +187,7 @@
             </a>
 
             <nav class="nav-links" aria-label="Primary navigation">
+                <a href="#free-teleprompter" class="nav-link">Free Teleprompter</a>
                 <a href="#features" class="nav-link">Features</a>
                 <a href="#how-it-works" class="nav-link">How It Works</a>
                 <a href="/guides/" class="nav-link">Guides</a>
@@ -192,6 +208,7 @@
             <!-- Mobile Menu Overlay -->
             <div class="mobile-menu-overlay" id="mobile-menu-overlay">
                 <nav class="mobile-nav-links" aria-label="Mobile navigation">
+                    <a href="#free-teleprompter" class="mobile-nav-link">Free Online Teleprompter</a>
                     <a href="#features" class="mobile-nav-link">Features</a>
                     <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
                     <a href="/guides/" class="mobile-nav-link">Creator Guides</a>
@@ -227,22 +244,25 @@
                         <a href="https://play.google.com/store/apps/details?id=com.confidentcam.confident_cam" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-btn-lg" id="hero-android-btn" data-track-cta="hero_google_play">
                             Download Free on Google Play
                         </a>
-                        <a href="/login.html" class="btn btn-outline hero-btn-lg" data-track-cta="hero_web_portal">
-                            Open Web Portal
+                        <a href="#free-teleprompter" class="btn btn-outline hero-btn-lg" data-track-cta="hero_free_teleprompter">
+                            Try Free Teleprompter (No Login)
                         </a>
                     </div>
 
-                    <div class="hero-ig-row" style="margin-bottom: 18px;">
+                    <div class="hero-ig-row" style="margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+                        <a href="/login.html" class="hero-ig-link" data-track-cta="hero_web_portal" style="text-decoration: none; font-weight: 600;">
+                            Already have the app? Open Web Portal &rarr;
+                        </a>
                         <button type="button" class="hero-ig-link coming-soon-btn" id="hero-ios-btn" style="background: none; border: none; cursor: pointer;" data-track-cta="hero_ios_coming_soon">
-                            iOS App Status: Coming Soon (Notify via @confidentcreator.app)
+                            iOS Status: Coming Soon
                         </button>
                     </div>
 
                     <div class="hero-trust-strip" aria-label="Key product facts">
+                        <span class="trust-chip">Try Teleprompter Without Login</span>
                         <span class="trust-chip">Free on Android</span>
                         <span class="trust-chip">Videos stay local on your phone</span>
                         <span class="trust-chip">12 script languages incl. Hinglish</span>
-                        <span class="trust-chip">Web Voice-Sync Teleprompter</span>
                     </div>
                 </div>
 
@@ -343,8 +363,116 @@
             </div>
         </section>
 
-        <!-- 2. Problems Faced by Camera-Shy Creators + 3. Product Solution -->
-        <section class="section-band alt" id="problems">
+        <!-- 2. Free Zero-Login Online Teleprompter -->
+        <section class="section-band alt" id="free-teleprompter">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-eyebrow">Instant Browser Tool &bull; No Sign-Up Required</span>
+                    <h2>Try our free online teleprompter right here</h2>
+                    <p>Paste any talking-head script or load a sample below, adjust your pace and eye line, and start practicing in your browser with zero login required.</p>
+                </div>
+
+                <div class="htp-studio" id="htp-studio">
+                    <!-- Script Editor & Presets -->
+                    <div class="htp-editor-panel">
+                        <div class="htp-editor-top">
+                            <label for="htp-script-input" class="htp-editor-label">Your Practice Script</label>
+                            <button type="button" id="htp-clear-btn" class="htp-clear-btn">Clear Text</button>
+                        </div>
+
+                        <div class="htp-presets" aria-label="Sample teleprompter scripts">
+                            <button type="button" class="htp-preset-btn active" data-htp-preset="reels_hook">30s Confidence Script</button>
+                            <button type="button" class="htp-preset-btn" data-htp-preset="creator_intro">Creator Intro</button>
+                            <button type="button" class="htp-preset-btn" data-htp-preset="hinglish_take">Hinglish Take</button>
+                        </div>
+
+                        <textarea id="htp-script-input" class="htp-textarea" placeholder="Paste or type your Reels, YouTube, or speaking practice script here..." rows="9"></textarea>
+
+                        <div class="htp-editor-meta">
+                            <span id="htp-word-count">0 words</span>
+                            <span id="htp-read-time">~0s speaking</span>
+                        </div>
+
+                        <div class="htp-discovery-banner">
+                            <span>Want AI to write custom scripts in 12 languages and sync them directly beneath your Android camera lens?</span>
+                            <div class="htp-discovery-links">
+                                <a href="https://play.google.com/store/apps/details?id=com.confidentcam.confident_cam" target="_blank" rel="noopener noreferrer" class="htp-discovery-link" data-track-cta="tp_banner_play">Get Android App &rarr;</a>
+                                <a href="/login.html" class="htp-discovery-link" data-track-cta="tp_banner_portal">Open Web Portal &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Teleprompter Stage -->
+                    <div class="htp-stage" id="htp-stage">
+                        <div class="htp-progress-track">
+                            <div class="htp-progress-fill" id="htp-progress-fill"></div>
+                        </div>
+
+                        <div class="htp-stage-header">
+                            <div class="htp-stage-title">
+                                <span>Studio Teleprompter</span>
+                                <span class="htp-elapsed" id="htp-elapsed">00:00</span>
+                                <span class="htp-status-pill hidden" id="htp-status-pill"></span>
+                            </div>
+                            <div class="htp-stage-header-actions">
+                                <button type="button" id="htp-expand-btn" class="htp-header-btn" aria-pressed="false">&#9974; Fullscreen</button>
+                                <button type="button" id="htp-collapse-btn" class="htp-header-btn hidden">&times; Close</button>
+                            </div>
+                        </div>
+
+                        <div class="htp-viewport-wrap">
+                            <div class="htp-eyeline" id="htp-eyeline" aria-hidden="true"></div>
+                            <div class="htp-viewport" id="htp-viewport" tabindex="0" aria-label="Scrolling teleprompter script display">
+                                <div class="htp-content" id="htp-content"></div>
+                            </div>
+
+                            <div class="htp-countdown-overlay hidden" id="htp-countdown-overlay" role="status" aria-live="polite">
+                                <div class="htp-countdown-num" id="htp-countdown-num">3</div>
+                                <div class="htp-countdown-hint">Look at your camera lens... (click to cancel)</div>
+                            </div>
+                        </div>
+
+                        <div class="htp-controls-dock">
+                            <div class="htp-controls-row">
+                                <div class="htp-btn-cluster">
+                                    <button type="button" id="htp-play-btn" class="htp-ctrl-btn primary" aria-pressed="false">&#9654; Play</button>
+                                    <button type="button" id="htp-reset-btn" class="htp-ctrl-btn">&#8634; Reset</button>
+                                    <button type="button" id="htp-voice-btn" class="htp-ctrl-btn" aria-pressed="false" title="Scroll with your voice (Web Speech or Mic)">&#127908; Voice Sync</button>
+                                </div>
+                                <div class="htp-btn-cluster">
+                                    <button type="button" id="htp-mirror-btn" class="htp-ctrl-btn" aria-pressed="false">&#129694; Mirror</button>
+                                    <button type="button" id="htp-countdown-btn" class="htp-ctrl-btn" aria-pressed="false">&#9201; 3s Off</button>
+                                    <button type="button" id="htp-eyeline-btn" class="htp-ctrl-btn">&#128065; Top Lens</button>
+                                </div>
+                            </div>
+
+                            <div class="htp-sliders-row">
+                                <label class="htp-slider-group" for="htp-speed">
+                                    <span>Speed</span>
+                                    <input type="range" id="htp-speed" min="15" max="130" value="42">
+                                    <span class="htp-slider-val" id="htp-speed-val">42</span>
+                                </label>
+
+                                <label class="htp-slider-group" for="htp-font-size">
+                                    <span>Size</span>
+                                    <input type="range" id="htp-font-size" min="22" max="64" value="34">
+                                    <span class="htp-slider-val" id="htp-font-size-val">34px</span>
+                                </label>
+
+                                <div class="htp-theme-swatches" aria-label="Teleprompter background themes">
+                                    <button type="button" class="htp-swatch active" data-htp-theme="obsidian" style="background: #12140E;" aria-label="Obsidian Dark theme"></button>
+                                    <button type="button" class="htp-swatch" data-htp-theme="black" style="background: #000000;" aria-label="Pure Black theme"></button>
+                                    <button type="button" class="htp-swatch" data-htp-theme="olive" style="background: #1B2117;" aria-label="Deep Olive theme"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Problems Faced by Camera-Shy Creators + Product Solution -->
+        <section class="section-band" id="problems">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Why Creators Get Stuck</span>
@@ -380,7 +508,7 @@
         </section>
 
         <!-- 4. How It Works -->
-        <section class="section-band" id="how-it-works">
+        <section class="section-band alt" id="how-it-works">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Step-by-Step Workflow</span>
@@ -463,7 +591,7 @@
         </section>
 
         <!-- 6. Application Screenshots & Web Portal Demonstration -->
-        <section class="section-band" id="screenshots">
+        <section class="section-band alt" id="screenshots">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Inside the Product</span>
@@ -564,7 +692,7 @@
         </section>
 
         <!-- 7. Target Audience -->
-        <section class="section-band alt" id="audience">
+        <section class="section-band" id="audience">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Who It Helps</span>
@@ -602,7 +730,7 @@
         </section>
 
         <!-- 8. Trust Signals & Transparency -->
-        <section class="section-band" id="trust">
+        <section class="section-band alt" id="trust">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Trust &amp; Transparency</span>
@@ -639,7 +767,7 @@
         </section>
 
         <!-- Educational Hub & Comparison Callout -->
-        <section class="section-band alt" id="learn">
+        <section class="section-band" id="learn">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Creator Knowledge Base</span>
@@ -667,7 +795,7 @@
         </section>
 
         <!-- 9. FAQs -->
-        <section class="section-band" id="faq">
+        <section class="section-band alt" id="faq">
             <div class="container">
                 <div class="section-header">
                     <span class="section-eyebrow">Frequently Asked Questions</span>
@@ -699,6 +827,10 @@
                     <article class="faq-card">
                         <h3>How does desktop-to-mobile sync work?</h3>
                         <p>Open Settings &rarr; Web Login inside the Android app and scan the QR code on the Web Portal login page. Scripts written or generated on your computer appear automatically inside your mobile library.</p>
+                    </article>
+                    <article class="faq-card">
+                        <h3>Can I use the teleprompter online without logging in?</h3>
+                        <p>Yes. Use the <a href="#free-teleprompter">free homepage teleprompter</a> above right in your browser without creating an account—paste any script, adjust scroll speed, font size, mirror mode, eye line, or Voice Sync, and switch to fullscreen.</p>
                     </article>
                 </div>
             </div>
@@ -792,6 +924,7 @@
     <!-- Scripts -->
     <script defer src="js/config.js"></script>
     <script defer src="js/analytics.js"></script>
+    <script defer src="js/home-teleprompter.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="js/supabase-client.js"></script>
     <script defer src="js/landing-content.js"></script>
