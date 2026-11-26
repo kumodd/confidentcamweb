@@ -9,7 +9,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Merriweather:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -67,14 +67,37 @@
                 <div class="custom-text-card">
                     <h3>✏️ Quick Start with Custom Text</h3>
                     <textarea id="custom-text" class="form-input form-textarea"
-                        placeholder="Paste or type your script here..." rows="4"></textarea>
-                    <button id="start-custom-btn" class="btn btn-primary">
-                        ▶️ Start Teleprompter
-                    </button>
+                        placeholder="Paste or type your script here... (Ctrl/⌘ + Enter to launch)" rows="4"></textarea>
+                    <div class="custom-text-footer">
+                        <span id="custom-word-count" class="custom-stats">0 words • ~0 min</span>
+                        <div class="custom-actions">
+                            <button id="clear-custom-btn" class="btn btn-ghost btn-sm hidden" type="button">
+                                Clear
+                            </button>
+                            <button id="start-custom-btn" class="btn btn-primary" type="button">
+                                ▶️ Start Teleprompter
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="divider">
                     <span>or select from your scripts</span>
+                </div>
+
+                <!-- Search & Filter Bar -->
+                <div class="scripts-toolbar">
+                    <div class="search-box">
+                        <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="script-search" class="form-input" placeholder="Search scripts...">
+                    </div>
+                    <div class="filter-pills">
+                        <button class="filter-pill active" data-filter="all" type="button">All</button>
+                        <button class="filter-pill" data-filter="pending" type="button">📝 Pending</button>
+                        <button class="filter-pill" data-filter="recorded" type="button">✅ Recorded</button>
+                    </div>
                 </div>
 
                 <!-- Scripts List -->
@@ -116,16 +139,49 @@
     </div>
 
     <!-- Teleprompter View (Full Screen) -->
-    <div id="teleprompter-view" class="teleprompter-view hidden">
+    <div id="teleprompter-view" class="teleprompter-view controls-visible hidden">
+
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="countdown-overlay hidden">
+            <div class="countdown-number" id="countdown-number">3</div>
+            <p class="countdown-hint">Get ready...</p>
+            <span class="countdown-cancel-hint">Click anywhere or press Esc to cancel</span>
+        </div>
+
+        <!-- Studio Toast Notification -->
+        <div id="studio-toast" class="studio-toast hidden"></div>
+
         <!-- Controls Bar (Top) -->
         <div class="teleprompter-controls-top">
-            <button id="exit-btn" class="control-btn" title="Exit (Esc)">
+            <button id="exit-btn" class="control-btn" title="Exit (Esc)" type="button">
                 ✕ Exit
             </button>
-            <div class="script-title-display" id="current-script-title">Untitled Script</div>
-            <button id="settings-btn" class="control-btn" title="Settings">
-                ⚙️ Settings
-            </button>
+
+            <div class="top-center-info">
+                <div class="script-title-display" id="current-script-title">Untitled Script</div>
+                <div class="script-meta-line">
+                    <span id="word-count-display" class="meta-badge">0 words</span>
+                    <span id="read-time-display" class="meta-badge">~0 min</span>
+                    <span id="progress-percent" class="meta-badge">0%</span>
+                </div>
+            </div>
+
+            <div class="top-right-controls">
+                <button id="fullscreen-btn" class="control-btn" title="Fullscreen (F)" type="button">
+                    ⛶
+                </button>
+                <button id="shortcuts-btn" class="control-btn" title="Keyboard Shortcuts (?)" type="button">
+                    ⌨️
+                </button>
+                <button id="settings-btn" class="control-btn" title="Settings" type="button">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar"></div>
         </div>
 
         <!-- Script Display -->
@@ -138,34 +194,73 @@
             <div class="reading-line"></div>
         </div>
 
+        <!-- Part Navigation (Jump To) -->
+        <div id="part-nav" class="part-nav hidden">
+            <button class="part-nav-btn active" data-part="hook" title="Jump to Hook (1)" type="button">
+                🎣 Hook
+            </button>
+            <button class="part-nav-btn" data-part="body" title="Jump to Body (2)" type="button">
+                📝 Body
+            </button>
+            <button class="part-nav-btn" data-part="close" title="Jump to Close (3)" type="button">
+                🎬 Close
+            </button>
+        </div>
+
         <!-- Controls Bar (Bottom) -->
         <div class="teleprompter-controls-bottom">
             <div class="control-group">
-                <button id="slower-btn" class="control-btn" title="Slower (↓)">
+                <button id="slower-btn" class="control-btn" title="Slower (↓)" type="button">
                     🐢
                 </button>
                 <span id="speed-display" class="speed-display">50</span>
-                <button id="faster-btn" class="control-btn" title="Faster (↑)">
+                <button id="faster-btn" class="control-btn" title="Faster (↑)" type="button">
                     🐇
                 </button>
             </div>
 
             <div class="control-group center">
-                <button id="reset-btn" class="control-btn" title="Reset (R)">
+                <button id="reset-btn" class="control-btn" title="Reset (R)" type="button">
                     ⏮️
                 </button>
-                <button id="play-pause-btn" class="control-btn large" title="Play/Pause (Space)">
+                <button id="play-pause-btn" class="control-btn large" title="Play/Pause (Space)" type="button">
                     ▶️
+                </button>
+                <button id="mark-recorded-btn" class="control-btn accent hidden" title="Mark as Recorded" type="button">
+                    ✅ Done
                 </button>
             </div>
 
             <div class="control-group">
-                <button id="mirror-btn" class="control-btn" title="Mirror (M)">
+                <span id="elapsed-time" class="elapsed-display" title="Elapsed speaking time">00:00</span>
+                <button id="mirror-btn" class="control-btn" title="Mirror (M)" type="button">
                     🪞
                 </button>
-                <button id="voice-btn" class="control-btn" title="Voice Control (V)">
+                <button id="voice-btn" class="control-btn" title="Voice Control (V)" type="button">
                     🎤
                 </button>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Overlay -->
+        <div id="shortcuts-overlay" class="shortcuts-overlay hidden">
+            <div class="shortcuts-card">
+                <div class="shortcuts-header">
+                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <button id="close-shortcuts" class="control-btn" type="button">✕</button>
+                </div>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-row"><kbd>Space</kbd><span>Play / Pause (or cancel countdown)</span></div>
+                    <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal / Exit teleprompter</span></div>
+                    <div class="shortcut-row"><kbd>R</kbd><span>Reset to Beginning</span></div>
+                    <div class="shortcut-row"><kbd>M</kbd><span>Toggle Mirror Mode</span></div>
+                    <div class="shortcut-row"><kbd>V</kbd><span>Toggle Voice Control</span></div>
+                    <div class="shortcut-row"><kbd>F</kbd><span>Toggle Fullscreen</span></div>
+                    <div class="shortcut-row"><kbd>↑ / ↓</kbd><span>Increase / Decrease Speed</span></div>
+                    <div class="shortcut-row"><kbd>← / →</kbd><span>Jump Back / Forward</span></div>
+                    <div class="shortcut-row"><kbd>1 / 2 / 3</kbd><span>Jump to Hook / Body / Close</span></div>
+                    <div class="shortcut-row"><kbd>?</kbd><span>Show / Hide This Help</span></div>
+                </div>
             </div>
         </div>
 
@@ -173,60 +268,117 @@
         <div id="settings-panel" class="settings-panel hidden">
             <div class="settings-header">
                 <h3>⚙️ Settings</h3>
-                <button id="close-settings" class="control-btn">✕</button>
+                <button id="close-settings" class="control-btn" type="button">✕</button>
             </div>
 
             <div class="settings-content">
                 <div class="setting-group">
-                    <label>Font Size</label>
+                    <label class="setting-label">
+                        <span>Font Size</span>
+                        <span class="setting-value" id="font-size-value">48px</span>
+                    </label>
                     <input type="range" id="font-size" min="24" max="96" value="48">
-                    <span id="font-size-value">48px</span>
                 </div>
 
                 <div class="setting-group">
-                    <label>Scroll Speed</label>
+                    <label class="setting-label">
+                        <span>Scroll Speed</span>
+                        <span class="setting-value" id="scroll-speed-value">50</span>
+                    </label>
                     <input type="range" id="scroll-speed" min="10" max="150" value="50">
-                    <span id="scroll-speed-value">50</span>
                 </div>
 
                 <div class="setting-group">
-                    <label>Line Height</label>
+                    <label class="setting-label">
+                        <span>Line Height</span>
+                        <span class="setting-value" id="line-height-value">1.8</span>
+                    </label>
                     <input type="range" id="line-height" min="1" max="3" step="0.1" value="1.8">
-                    <span id="line-height-value">1.8</span>
                 </div>
 
                 <div class="setting-group">
-                    <label>Text Color</label>
-                    <div class="color-options">
-                        <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF"></button>
-                        <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00"></button>
-                        <button class="color-btn" data-color="#00FF00" style="background: #00FF00"></button>
-                        <button class="color-btn" data-color="#00FFFF" style="background: #00FFFF"></button>
-                        <button class="color-btn" data-color="#B8CF7A" style="background: #B8CF7A"></button>
+                    <label class="setting-label">
+                        <span>Content Width</span>
+                        <span class="setting-value" id="content-width-value">90%</span>
+                    </label>
+                    <input type="range" id="content-width" min="50" max="100" step="5" value="90">
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <span>Eye-Line Position</span>
+                        <span class="setting-value" id="eyeline-pos-value">50%</span>
+                    </label>
+                    <input type="range" id="eyeline-pos" min="20" max="60" step="5" value="50">
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label"><span>Font Family</span></label>
+                    <div class="font-options">
+                        <button class="font-btn active" data-font="sans" title="Sans Serif" type="button">Aa</button>
+                        <button class="font-btn" data-font="serif" title="Serif" type="button">Aa</button>
+                        <button class="font-btn mono" data-font="mono" title="Monospace" type="button">Aa</button>
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <label>Background</label>
-                    <div class="color-options">
-                        <button class="bg-btn active" data-bg="#000000" style="background: #000000"></button>
-                        <button class="bg-btn" data-bg="#12140E" style="background: #12140E"></button>
-                        <button class="bg-btn" data-bg="#1B2117" style="background: #1B2117"></button>
-                        <button class="bg-btn" data-bg="#001a00" style="background: #001a00"></button>
+                    <label class="setting-label"><span>Text Alignment</span></label>
+                    <div class="align-options">
+                        <button class="align-btn" data-align="left" title="Left" type="button">◧</button>
+                        <button class="align-btn active" data-align="center" title="Center" type="button">▣</button>
+                        <button class="align-btn" data-align="right" title="Right" type="button">◨</button>
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <label>
-                        <input type="checkbox" id="show-parts"> Show Part Labels
-                    </label>
+                    <label class="setting-label"><span>Text Color</span></label>
+                    <div class="color-options">
+                        <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF" type="button" aria-label="White"></button>
+                        <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00" type="button" aria-label="Yellow"></button>
+                        <button class="color-btn" data-color="#00FF00" style="background: #00FF00" type="button" aria-label="Green"></button>
+                        <button class="color-btn" data-color="#00FFFF" style="background: #00FFFF" type="button" aria-label="Cyan"></button>
+                        <button class="color-btn" data-color="#B8CF7A" style="background: #B8CF7A" type="button" aria-label="Sage"></button>
+                    </div>
                 </div>
 
                 <div class="setting-group">
-                    <label>
-                        <input type="checkbox" id="show-divider" checked> Show Reading Line
+                    <label class="setting-label"><span>Background</span></label>
+                    <div class="color-options">
+                        <button class="bg-btn active" data-bg="#000000" style="background: #000000" type="button" aria-label="Black"></button>
+                        <button class="bg-btn" data-bg="#12140E" style="background: #12140E" type="button" aria-label="Warm Obsidian"></button>
+                        <button class="bg-btn" data-bg="#1B2117" style="background: #1B2117" type="button" aria-label="Deep Olive"></button>
+                        <button class="bg-btn" data-bg="#001a00" style="background: #001a00" type="button" aria-label="Studio Green"></button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label"><span>Countdown</span></label>
+                    <div class="countdown-options">
+                        <button class="countdown-opt-btn" data-seconds="0" type="button">Off</button>
+                        <button class="countdown-opt-btn active" data-seconds="3" type="button">3s</button>
+                        <button class="countdown-opt-btn" data-seconds="5" type="button">5s</button>
+                        <button class="countdown-opt-btn" data-seconds="10" type="button">10s</button>
+                    </div>
+                </div>
+
+                <div class="setting-group setting-toggles">
+                    <label class="setting-checkbox">
+                        <input type="checkbox" id="show-parts" checked>
+                        <span>Show Part Labels</span>
+                    </label>
+                    <label class="setting-checkbox">
+                        <input type="checkbox" id="show-divider" checked>
+                        <span>Show Reading Line</span>
+                    </label>
+                    <label class="setting-checkbox">
+                        <input type="checkbox" id="auto-hide-controls" checked>
+                        <span>Auto-hide Controls</span>
                     </label>
                 </div>
+
+                <button id="reset-settings-btn" class="reset-settings-btn" type="button">
+                    ↺ Reset to Defaults
+                </button>
             </div>
         </div>
 
