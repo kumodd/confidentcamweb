@@ -1135,6 +1135,37 @@
     background: #64B87E;
     border-radius: 50%;
     animation: pulse 1s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.voice-indicator.speaking {
+    border-color: #B8CF7A;
+    background: rgba(78, 89, 43, 0.85);
+    color: #F6F7F0;
+}
+
+.voice-indicator.speaking .voice-dot {
+    background: #B8CF7A;
+    box-shadow: 0 0 8px #B8CF7A;
+}
+
+.voice-meter {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 16px;
+}
+
+.voice-bar {
+    width: 3px;
+    height: 4px;
+    background: rgba(183, 228, 199, 0.45);
+    border-radius: 2px;
+    transition: height 0.08s ease-out, background-color 0.12s ease;
+}
+
+.voice-indicator.speaking .voice-bar {
+    background: #B8CF7A;
 }
 
 /* ============================================

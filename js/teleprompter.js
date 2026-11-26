@@ -1,7 +1,7 @@
 // ============================================
 // TELEPROMPTER CONTROLLER
-// Advanced teleprompter with voice word-sync, timed auto-scroll,
-// mirroring, countdown, progress tracking, fullscreen, wake lock, and shortcuts
+// Advanced teleprompter with voice word-sync, Brave/Firefox Mic VAD fallback,
+// timed auto-scroll, mirroring, countdown, progress tracking, fullscreen, wake lock, and shortcuts
 // ============================================
 
 let currentUser = null;
@@ -11,7 +11,9 @@ let selectedScriptId = null; // track DB script id for mark-as-recorded
 const PREFS_STORAGE_KEY = 'cc_teleprompter_prefs';
 
 const DEFAULT_PREFS = {
-    scrollMode: 'auto',     // 'auto' | 'voice' (voice = auto-scroll off, word-by-word)
+    scrollMode: 'auto',     // 'auto' | 'voice' (voice = auto-scroll off, scroll when speaking)
+    voiceEngine: 'auto',    // 'auto' | 'speech' | 'vad'
+    voiceSensitivity: 5,    // 1 (low) to 10 (high) for Mic Voice Activity detection
     voiceLang: 'en-US',
     highlightSpoken: true,
     scrollSpeed: (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.defaultTeleprompterSpeed) || 50,
@@ -49,7 +51,15 @@ let toastTimeout = null;
 let wakeLockSentinel = null;
 
 // Voice Recognition & Word Tracking State
+let speechRecognitionCtor = null;
 let recognition = null;
+let isRecognitionRunning = false;
+let isBraveBrowser = false;
+let speechApiBlocked = false;
+let hasReceivedSpeechResult = false;
+let consecutiveSpeechErrors = 0;
+let activeVoiceMode = null;         // 'speech' | 'vad' | null
+
 let scriptWords = [];               // [{ index, norm, el }]
 let voiceWordIndex = 0;             // Next expected word index in scriptWords
 let voiceScrollFrame = null;        // RAF id for smooth scroll-to-word easing
@@ -58,6 +68,21 @@ let voiceSegmentAnchors = new Map();
 let voiceSegmentSkipCount = new Map();
 let voiceLastSeenCount = new Map();
 let voiceFinalizedResults = new Set();
+
+// Web Audio Voice-Activity Detection (VAD) Handles (Brave / Firefox / Offline support)
+let vadAudioCtx = null;
+let vadStream = null;
+let vadSource = null;
+let vadAnalyser = null;
+let vadFreqData = null;
+let vadTimeData = null;
+let vadFrame = null;
+let vadLastTimestamp = null;
+let vadLastSpeechAt = 0;
+let vadNoiseFloor = 3.0;
+let vadVelocity = 0;
+let vadCalibSamples = [];
+const VAD_SPEECH_HOLD_MS = 480;
 
 // Font family map
 const FONT_MAP = {
@@ -82,6 +107,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Restore persisted user preferences before wiring UI
     loadSavedSettings();
+
+    // Detect Brave so 'auto' voice engine doesn't get stuck on blocked Google Speech API
+    await detectBraveBrowser();
 
     // Initialize services
     initSupabase();
@@ -470,7 +498,7 @@ function indexScriptWords() {
 
     // Preserve active word highlight if content was re-rendered mid-session
     voiceWordIndex = Math.min(voiceWordIndex, scriptWords.length);
-    if (state.isVoiceActive || state.scrollMode === 'voice') {
+    if (activeVoiceMode === 'speech' && state.isVoiceActive) {
         updateWordHighlight(voiceWordIndex);
     }
 }
@@ -569,6 +597,8 @@ function playWithCountdown() {
         if (state.isVoiceActive) {
             stopVoice();
         } else {
+            // Prepare AudioContext synchronously on user gesture BEFORE any countdown delay
+            prepareAudioContext();
             if (state.scrollPosition >= getMaxScroll() - 2) {
                 resetScroll();
             }
@@ -758,6 +788,10 @@ function resetScroll() {
         startElapsedTimer();
     }
 
+    vadVelocity = 0;
+    vadLastSpeechAt = 0;
+    vadLastTimestamp = null;
+
     voiceWordIndex = 0;
     freezeActiveSpeechPrefix();
     updateWordHighlight(-1);
@@ -873,23 +907,28 @@ function saveSettings() {
     }
 }
 
-/** Reflect active scroll mode (Auto Scroll vs Voice Sync) across HUD & Settings */
+/** Reflect active scroll mode (Auto Scroll vs Voice Sync) and voice engine across HUD & Settings */
 function syncScrollModeUI() {
     const isVoiceMode = state.scrollMode === 'voice';
+    const resolvedEngine = resolveVoiceEngine();
+    const isWordSyncDriving = (state.isVoiceActive && activeVoiceMode === 'speech') ||
+        (isVoiceMode && !state.isVoiceActive && resolvedEngine === 'speech');
+
     const speedGroup = document.getElementById('speed-control-group');
     const modeBadge = document.getElementById('scroll-mode-badge');
     const modeHint = document.getElementById('scroll-mode-hint');
     const playBtn = document.getElementById('play-pause-btn');
 
     if (speedGroup) {
-        speedGroup.classList.toggle('disabled-mode', isVoiceMode || state.isVoiceActive);
+        // Only dim speed controls when word-matching STT drives exact position; VAD uses scrollSpeed
+        speedGroup.classList.toggle('disabled-mode', isWordSyncDriving);
     }
     if (modeBadge) {
         modeBadge.textContent = isVoiceMode ? 'Voice' : 'Auto';
     }
     if (modeHint) {
         modeHint.textContent = isVoiceMode
-            ? 'Auto-scroll off — scrolls as words are spoken'
+            ? 'Auto-scroll off — scrolls only when you speak'
             : 'Scrolls continuously at set speed';
     }
     if (playBtn) {
@@ -925,6 +964,9 @@ function syncSettingsUI() {
     document.getElementById('eyeline-pos').value = state.eyeLinePos;
     document.getElementById('eyeline-pos-value').textContent = `${state.eyeLinePos}%`;
 
+    document.getElementById('voice-engine').value = state.voiceEngine;
+    document.getElementById('voice-sensitivity').value = state.voiceSensitivity;
+    document.getElementById('voice-sensitivity-value').textContent = state.voiceSensitivity;
     document.getElementById('voice-lang').value = state.voiceLang;
 
     const activeSelectors = [
@@ -975,10 +1017,10 @@ function toggleSettings() {
     }
 }
 
-/** Switch cleanly between 'auto' (timed scroll) and 'voice' (word-by-word) modes */
+/** Switch cleanly between 'auto' (timed scroll) and 'voice' (voice-driven) modes */
 function setScrollMode(mode) {
-    if (mode === 'voice' && !recognition) {
-        showStudioToast('Voice recognition not supported in this browser');
+    if (mode === 'voice' && !hasAnyVoiceSupport()) {
+        showStudioToast('Voice input not supported in this browser');
         return;
     }
 
@@ -986,6 +1028,7 @@ function setScrollMode(mode) {
     saveSettings();
 
     if (mode === 'voice') {
+        prepareAudioContext();
         stopScrolling();
         const isTeleprompterOpen = !document.getElementById('teleprompter-view').classList.contains('hidden');
         if (isTeleprompterOpen && !state.isVoiceActive) {
@@ -1010,13 +1053,36 @@ function setupSettings() {
         btn.addEventListener('click', () => setScrollMode(btn.dataset.mode));
     });
 
+    // Voice Engine selector
+    document.getElementById('voice-engine').addEventListener('change', (e) => {
+        state.voiceEngine = e.target.value;
+        saveSettings();
+        if (state.voiceEngine !== 'vad') {
+            // Allow user to explicitly retry speech API if desired
+            speechApiBlocked = false;
+        }
+        if (state.isVoiceActive) {
+            prepareAudioContext();
+            stopVoice();
+            startVoice();
+        }
+        syncScrollModeUI();
+    });
+
+    // Mic Sensitivity (VAD)
+    document.getElementById('voice-sensitivity').addEventListener('input', (e) => {
+        state.voiceSensitivity = parseInt(e.target.value, 10);
+        document.getElementById('voice-sensitivity-value').textContent = state.voiceSensitivity;
+        saveSettings();
+    });
+
     // Voice Language
     document.getElementById('voice-lang').addEventListener('change', (e) => {
         state.voiceLang = e.target.value;
         saveSettings();
         if (recognition) {
             recognition.lang = state.voiceLang;
-            if (state.isVoiceActive) {
+            if (state.isVoiceActive && activeVoiceMode === 'speech') {
                 try {
                     recognition.stop(); // triggers onend -> restarts with new language
                 } catch (err) {
@@ -1078,7 +1144,7 @@ function setupSettings() {
     document.getElementById('highlight-spoken').addEventListener('change', (e) => {
         state.highlightSpoken = e.target.checked;
         saveSettings();
-        if (state.highlightSpoken && (state.isVoiceActive || state.scrollMode === 'voice')) {
+        if (state.highlightSpoken && state.isVoiceActive && activeVoiceMode === 'speech') {
             updateWordHighlight(voiceWordIndex);
         } else {
             clearWordHighlights();
@@ -1118,6 +1184,7 @@ function setupSettings() {
         stopVoice();
         Object.assign(state, DEFAULT_PREFS);
         localStorage.removeItem(PREFS_STORAGE_KEY);
+        speechApiBlocked = false;
         if (recognition) recognition.lang = state.voiceLang;
         clearWordHighlights();
         syncSettingsUI();
@@ -1384,7 +1451,7 @@ function showStudioToast(message) {
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => {
         toast.classList.add('hidden');
-    }, 1800);
+    }, 2200);
 }
 
 // ============================================
@@ -1480,9 +1547,64 @@ function jumpScroll(delta) {
 }
 
 // ============================================
-// VOICE WORD-SYNC ENGINE (Web Speech API)
-// Auto-scroll OFF; matches & scrolls smoothly with words spoken
+// VOICE ENGINE: WORD-SYNC (Web Speech API) + MIC VAD FALLBACK (Brave/Firefox)
+// Auto-scroll timer stays OFF; scrolls when words/voice are spoken
 // ============================================
+
+async function detectBraveBrowser() {
+    try {
+        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+            isBraveBrowser = await navigator.brave.isBrave();
+        }
+    } catch (e) {
+        isBraveBrowser = false;
+    }
+}
+
+function hasVadSupport() {
+    return !!(
+        typeof navigator !== 'undefined' &&
+        navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getUserMedia === 'function' &&
+        (window.AudioContext || window.webkitAudioContext)
+    );
+}
+
+function hasAnyVoiceSupport() {
+    return !!(speechRecognitionCtor || hasVadSupport());
+}
+
+/** Choose 'speech' (word-by-word STT) or 'vad' (local mic voice activity detection) */
+function resolveVoiceEngine() {
+    if (state.voiceEngine === 'vad') {
+        return hasVadSupport() ? 'vad' : (speechRecognitionCtor ? 'speech' : null);
+    }
+    if (state.voiceEngine === 'speech') {
+        if (speechRecognitionCtor && !speechApiBlocked) return 'speech';
+        return hasVadSupport() ? 'vad' : null;
+    }
+    // 'auto': Brave disables Google Web Speech servers ('network' error), so use local Mic VAD seamlessly
+    if (!speechRecognitionCtor || speechApiBlocked || isBraveBrowser) {
+        return hasVadSupport() ? 'vad' : null;
+    }
+    return 'speech';
+}
+
+/** Create/resume AudioContext synchronously inside a user click/keypress gesture */
+function prepareAudioContext() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    try {
+        if (!vadAudioCtx) {
+            vadAudioCtx = new AudioCtx();
+        }
+        if (vadAudioCtx.state === 'suspended') {
+            vadAudioCtx.resume().catch(() => {});
+        }
+    } catch (e) {
+        console.log('AudioContext init error:', e);
+    }
+}
 
 /** Normalize a token for resilient speech-to-script matching */
 function normalizeWord(raw) {
@@ -1515,7 +1637,6 @@ function wordsMatch(spoken, expected) {
         return false;
     }
 
-    // Ensure a is the shorter (or equal) string
     const a = spoken.length <= expected.length ? spoken : expected;
     const b = spoken.length <= expected.length ? expected : spoken;
 
@@ -1527,7 +1648,6 @@ function wordsMatch(spoken, expected) {
         return true;
     }
 
-    // Single insertion/deletion check
     let i = 0;
     let j = 0;
     let skipped = false;
@@ -1560,7 +1680,6 @@ function matchTokensForward(tokens, startCursor) {
         const tok = tokens[t];
         let matchedAt = -1;
 
-        // Pass 1: near lookahead
         const nearEnd = Math.min(total, cursor + 8);
         for (let j = cursor; j < nearEnd; j++) {
             if (wordsMatch(tok, scriptWords[j].norm)) {
@@ -1569,7 +1688,6 @@ function matchTokensForward(tokens, startCursor) {
             }
         }
 
-        // Pass 2: wider recovery lookahead when 2 consecutive spoken words align
         if (matchedAt === -1 && t + 1 < tokens.length) {
             const nextTok = tokens[t + 1];
             const farEnd = Math.min(total - 1, cursor + 32);
@@ -1690,7 +1808,7 @@ function syncVoiceCursorToScroll() {
     voiceWordIndex = closestIdx;
     freezeActiveSpeechPrefix();
 
-    if (state.isVoiceActive || state.scrollMode === 'voice') {
+    if (state.isVoiceActive && activeVoiceMode === 'speech') {
         updateWordHighlight(voiceWordIndex);
     }
 }
@@ -1708,6 +1826,9 @@ function freezeActiveSpeechPrefix() {
 
 function processSpeechResults(event) {
     if (scriptWords.length === 0) return;
+
+    hasReceivedSpeechResult = true;
+    consecutiveSpeechErrors = 0;
 
     let latestTranscriptTail = '';
 
@@ -1756,42 +1877,48 @@ function processSpeechResults(event) {
 }
 
 function setupVoiceRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    speechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
-    if (!SpeechRecognition) {
-        console.log('Voice recognition not supported');
+    if (!hasAnyVoiceSupport()) {
+        console.log('No voice input API available');
         document.getElementById('voice-btn').style.display = 'none';
         const voiceModeBtn = document.querySelector('.mode-btn[data-mode="voice"]');
         if (voiceModeBtn) {
             voiceModeBtn.disabled = true;
-            voiceModeBtn.title = 'Not supported in this browser (use Chrome, Edge, or Safari)';
+            voiceModeBtn.title = 'Microphone API unavailable in this browser';
         }
         return;
     }
 
-    recognition = new SpeechRecognition();
+    if (!speechRecognitionCtor) {
+        return;
+    }
+
+    recognition = new speechRecognitionCtor();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = state.voiceLang || 'en-US';
 
     recognition.onstart = () => {
-        console.log('🎤 Voice word-sync started');
+        isRecognitionRunning = true;
+        console.log('🎤 Web Speech word-sync started');
         // Fresh SpeechRecognition session clears event.results indices while keeping script voiceWordIndex
         voiceSegmentAnchors.clear();
         voiceSegmentSkipCount.clear();
         voiceLastSeenCount.clear();
         voiceFinalizedResults.clear();
 
-        document.getElementById('voice-indicator').classList.remove('hidden');
-        document.getElementById('voice-btn').classList.add('active');
-        syncScrollModeUI();
+        if (state.isVoiceActive && activeVoiceMode === 'speech') {
+            showVoiceIndicator('Word Sync (Auto-scroll off) • Speak script...', false);
+        }
     };
 
     recognition.onend = () => {
-        console.log('🎤 Voice recognition ended');
+        isRecognitionRunning = false;
+        console.log('🎤 Web Speech recognition ended');
 
-        // Keep listening continuously across natural pauses
-        if (state.isVoiceActive) {
+        // Keep listening continuously across natural pauses only if Web Speech is healthy & active
+        if (state.isVoiceActive && activeVoiceMode === 'speech' && !speechApiBlocked) {
             try {
                 recognition.start();
                 return;
@@ -1800,9 +1927,9 @@ function setupVoiceRecognition() {
             }
         }
 
-        document.getElementById('voice-indicator').classList.add('hidden');
-        document.getElementById('voice-btn').classList.remove('active');
-        syncScrollModeUI();
+        if (!state.isVoiceActive) {
+            hideVoiceIndicator();
+        }
     };
 
     recognition.onresult = (event) => {
@@ -1810,40 +1937,333 @@ function setupVoiceRecognition() {
     };
 
     recognition.onerror = (event) => {
-        // 'no-speech' and 'aborted' happen routinely during natural pauses; ignore silently
+        // 'no-speech' and 'aborted' happen routinely during pauses or intentional stops
         if (event.error === 'no-speech' || event.error === 'aborted') {
             return;
         }
         console.error('Voice recognition error:', event.error);
+
         if (event.error === 'not-allowed') {
             alert('Microphone access denied. Please allow microphone access to scroll with voice.');
             stopVoice();
-        } else if (event.error === 'audio-capture') {
+            return;
+        }
+
+        if (event.error === 'audio-capture') {
             showStudioToast('No microphone detected');
             stopVoice();
-        } else if (event.error === 'network') {
-            showStudioToast('Voice recognition network error');
+            return;
+        }
+
+        // Brave & privacy-hardened browsers fire 'network' or 'service-not-allowed' because Google STT is blocked
+        consecutiveSpeechErrors++;
+        const shouldFallbackNow =
+            event.error === 'service-not-allowed' ||
+            event.error === 'language-not-supported' ||
+            (event.error === 'network' && (!hasReceivedSpeechResult || consecutiveSpeechErrors >= 2 || isBraveBrowser));
+
+        if (shouldFallbackNow) {
+            speechApiBlocked = true;
+            stopSpeechRecognitionEngine();
+            fallbackToVad(event.error);
         }
     };
 }
 
-function toggleVoice() {
-    if (!recognition) {
-        alert('Voice recognition is not supported in this browser (try Chrome, Edge, or Safari).');
+function showVoiceIndicator(statusText, showMeter) {
+    const indicator = document.getElementById('voice-indicator');
+    const statusEl = document.getElementById('voice-status-text');
+    const meterEl = document.getElementById('voice-meter');
+    const previewEl = document.getElementById('voice-heard-preview');
+
+    if (statusEl) statusEl.textContent = statusText;
+    if (meterEl) meterEl.classList.toggle('hidden', !showMeter);
+    if (previewEl && showMeter) previewEl.textContent = '';
+
+    indicator?.classList.remove('hidden');
+    document.getElementById('voice-btn')?.classList.add('active');
+    syncScrollModeUI();
+}
+
+function hideVoiceIndicator() {
+    const indicator = document.getElementById('voice-indicator');
+    indicator?.classList.add('hidden', 'speaking');
+    document.getElementById('voice-btn')?.classList.remove('active');
+    syncScrollModeUI();
+}
+
+function startSpeechRecognitionEngine() {
+    if (!recognition) return;
+
+    activeVoiceMode = 'speech';
+    hasReceivedSpeechResult = false;
+    consecutiveSpeechErrors = 0;
+
+    syncVoiceCursorToScroll();
+    updateWordHighlight(voiceWordIndex);
+    showVoiceIndicator('Word Sync (Auto-scroll off) • Listening...', false);
+
+    if (!isRecognitionRunning) {
+        try {
+            recognition.lang = state.voiceLang || 'en-US';
+            recognition.start();
+        } catch (e) {
+            console.log('Speech recognition start error:', e);
+        }
+    }
+}
+
+function stopSpeechRecognitionEngine() {
+    isRecognitionRunning = false;
+    try {
+        recognition?.abort?.();
+    } catch (e) {
+        try {
+            recognition?.stop?.();
+        } catch (e2) {
+            console.log('Voice stop error:', e2);
+        }
+    }
+}
+
+/** Seamlessly switch to local Web Audio Mic VAD when browser blocks Google Speech-to-Text */
+function fallbackToVad(reason) {
+    if (!state.isVoiceActive) return;
+
+    if (!hasVadSupport()) {
+        showStudioToast(`Speech recognition failed (${reason})`);
+        stopVoice();
         return;
     }
+
+    clearWordHighlights();
+    showStudioToast('Browser blocked Speech-to-Text — switched to Mic Voice Scroll');
+    startVadVoice(true);
+}
+
+/** Measure speech-band + time-domain mic energy cleanly (250 Hz – 3400 Hz) */
+function measureSpeechBandEnergy() {
+    if (!vadAnalyser || !vadAudioCtx || !vadFreqData || !vadTimeData) return 0;
+
+    vadAnalyser.getByteFrequencyData(vadFreqData);
+    vadAnalyser.getByteTimeDomainData(vadTimeData);
+
+    const sampleRate = vadAudioCtx.sampleRate || 48000;
+    const nyquist = sampleRate / 2;
+    const binCount = vadAnalyser.frequencyBinCount;
+    const minBin = Math.max(1, Math.floor((250 / nyquist) * binCount));
+    const maxBin = Math.min(binCount - 1, Math.ceil((3400 / nyquist) * binCount));
+
+    let bandSum = 0;
+    for (let b = minBin; b <= maxBin; b++) {
+        bandSum += vadFreqData[b];
+    }
+    const bandAvg = bandSum / Math.max(1, maxBin - minBin + 1);
+
+    // Time-domain RMS scaled to 0..255 range for quiet-headset reliability
+    let sqSum = 0;
+    for (let i = 0; i < vadTimeData.length; i++) {
+        const centered = (vadTimeData[i] - 128) / 128;
+        sqSum += centered * centered;
+    }
+    const rms = Math.sqrt(sqSum / vadTimeData.length) * 255;
+
+    return Math.max(bandAvg, rms * 1.15);
+}
+
+/** Animate 5-bar mic activity meter & active speaking glow */
+function updateVadMeter(level, threshold, isSpeaking) {
+    const indicator = document.getElementById('voice-indicator');
+    const meter = document.getElementById('voice-meter');
+    if (!indicator || !meter) return;
+
+    indicator.classList.toggle('speaking', isSpeaking);
+
+    const normalized = Math.min(1, level / Math.max(threshold * 2.4, 24));
+    const weights = [0.6, 0.9, 1.0, 0.85, 0.55];
+    const bars = meter.querySelectorAll('.voice-bar');
+    bars.forEach((bar, idx) => {
+        const heightPx = Math.round(4 + normalized * weights[idx] * 12);
+        bar.style.height = `${heightPx}px`;
+    });
+}
+
+function vadStep(timestamp) {
+    if (!state.isVoiceActive || activeVoiceMode !== 'vad') return;
+
+    if (!vadLastTimestamp) {
+        vadLastTimestamp = timestamp;
+    }
+    const elapsed = Math.min(100, timestamp - vadLastTimestamp);
+    vadLastTimestamp = timestamp;
+
+    const level = measureSpeechBandEnergy();
+
+    // Calibrate noise floor over initial frames using 25th percentile so early speech won't lock high floor
+    if (vadCalibSamples.length < 10) {
+        vadCalibSamples.push(level);
+        if (vadCalibSamples.length === 10) {
+            const sorted = [...vadCalibSamples].sort((a, b) => a - b);
+            vadNoiseFloor = Math.min(12, Math.max(1.5, sorted[2]));
+        }
+    }
+
+    const sensitivityOffset = (11 - state.voiceSensitivity) * 1.55;
+    const threshold = Math.max(3.5, vadNoiseFloor * 1.45 + sensitivityOffset);
+
+    if (level > threshold) {
+        vadLastSpeechAt = timestamp;
+    } else if (vadCalibSamples.length >= 10) {
+        // Adapt ambient noise floor smoothly during silence
+        const rate = level < vadNoiseFloor ? 0.05 : 0.008;
+        vadNoiseFloor = Math.min(16, Math.max(1.5, vadNoiseFloor * (1 - rate) + level * rate));
+    }
+
+    const isSpeaking = vadLastSpeechAt > 0 && (timestamp - vadLastSpeechAt) <= VAD_SPEECH_HOLD_MS;
+    const statusEl = document.getElementById('voice-status-text');
+    if (statusEl) {
+        statusEl.textContent = isSpeaking
+            ? 'Mic Voice Scroll • Speaking...'
+            : 'Mic Voice Scroll • Pause (speak to scroll)';
+    }
+
+    updateVadMeter(level, threshold, isSpeaking);
+
+    // Smooth ease velocity so scrolling starts & stops naturally without stuttering
+    const targetVel = isSpeaking ? 1 : 0;
+    vadVelocity += (targetVel - vadVelocity) * (isSpeaking ? 0.24 : 0.18);
+
+    if (vadVelocity > 0.02) {
+        const scrollAmount = (state.scrollSpeed / 1000) * elapsed * vadVelocity;
+        const maxScroll = getMaxScroll();
+        setScrollPosition(state.scrollPosition + scrollAmount);
+
+        if (state.scrollPosition >= maxScroll) {
+            vadVelocity = 0;
+            onScrollComplete();
+            stopVoice();
+            return;
+        }
+    }
+
+    vadFrame = requestAnimationFrame(vadStep);
+}
+
+/** Local microphone Voice Activity Detection scroll (works natively in Brave, Firefox, Chrome, Safari) */
+async function startVadVoice(isFallback = false) {
+    if (!hasVadSupport()) {
+        showStudioToast('Microphone API unavailable');
+        stopVoice();
+        return;
+    }
+
+    activeVoiceMode = 'vad';
+    vadLastTimestamp = null;
+    vadLastSpeechAt = 0;
+    vadNoiseFloor = 3.0;
+    vadVelocity = 0;
+    vadCalibSamples = [];
+    clearWordHighlights();
+
+    showVoiceIndicator(
+        isFallback ? 'Mic Voice Scroll (STT blocked) • Allow mic...' : 'Mic Voice Scroll • Requesting mic...',
+        true
+    );
+
+    try {
+        prepareAudioContext();
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+
+        // If user cancelled or exited while permission prompt was open, clean up immediately
+        if (!state.isVoiceActive || activeVoiceMode !== 'vad') {
+            stream.getTracks().forEach(t => t.stop());
+            return;
+        }
+
+        vadStream = stream;
+        if (vadAudioCtx.state === 'suspended') {
+            await vadAudioCtx.resume();
+        }
+
+        vadSource = vadAudioCtx.createMediaStreamSource(vadStream);
+        vadAnalyser = vadAudioCtx.createAnalyser();
+        vadAnalyser.fftSize = 1024;
+        vadAnalyser.smoothingTimeConstant = 0.45;
+        vadSource.connect(vadAnalyser);
+
+        vadFreqData = new Uint8Array(vadAnalyser.frequencyBinCount);
+        vadTimeData = new Uint8Array(vadAnalyser.fftSize);
+
+        showVoiceIndicator('Mic Voice Scroll • Speak to scroll', true);
+        vadFrame = requestAnimationFrame(vadStep);
+    } catch (err) {
+        console.error('Microphone VAD error:', err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            alert('Microphone access denied. Please allow microphone permission to scroll with voice.');
+        } else if (err.name === 'NotFoundError') {
+            showStudioToast('No microphone found');
+        } else {
+            showStudioToast('Could not start microphone');
+        }
+        stopVoice();
+    }
+}
+
+function stopVadVoice() {
+    if (vadFrame) {
+        cancelAnimationFrame(vadFrame);
+        vadFrame = null;
+    }
+    vadVelocity = 0;
+    vadLastSpeechAt = 0;
+    vadLastTimestamp = null;
+
+    if (vadSource) {
+        try { vadSource.disconnect(); } catch (e) {}
+        vadSource = null;
+    }
+    vadAnalyser = null;
+
+    if (vadStream) {
+        vadStream.getTracks().forEach(track => track.stop());
+        vadStream = null;
+    }
+}
+
+function toggleVoice() {
+    if (!hasAnyVoiceSupport()) {
+        alert('Microphone voice detection is not supported in this browser.');
+        return;
+    }
+
+    prepareAudioContext();
 
     if (state.isVoiceActive) {
         stopVoice();
         showStudioToast('Voice scroll paused');
     } else {
         startVoice();
-        showStudioToast('Voice scroll active (auto-scroll off)');
+        const engine = resolveVoiceEngine();
+        showStudioToast(
+            engine === 'vad'
+                ? 'Mic Voice Scroll active (auto-scroll off)'
+                : 'Voice Word-Sync active (auto-scroll off)'
+        );
     }
 }
 
 function startVoice() {
-    if (!recognition) return;
+    const engine = resolveVoiceEngine();
+    if (!engine) {
+        showStudioToast('Microphone voice input unavailable');
+        return;
+    }
 
     // Auto-scroll MUST stay off when voice detection controls scrolling
     if (state.isPlaying) {
@@ -1852,29 +2272,25 @@ function startVoice() {
     cancelCountdown();
 
     state.isVoiceActive = true;
-    recognition.lang = state.voiceLang || 'en-US';
-    syncVoiceCursorToScroll();
-    updateWordHighlight(voiceWordIndex);
     startElapsedTimer();
-    syncScrollModeUI();
     scheduleControlsHide();
 
-    try {
-        recognition.start();
-    } catch (e) {
-        console.log('Voice already active:', e);
+    if (engine === 'vad') {
+        startVadVoice(speechApiBlocked || (isBraveBrowser && state.voiceEngine === 'auto'));
+    } else {
+        startSpeechRecognitionEngine();
     }
+
+    syncScrollModeUI();
 }
 
 function stopVoice() {
     state.isVoiceActive = false;
-    stopVoiceScrollAnimation();
+    activeVoiceMode = null;
 
-    try {
-        recognition?.stop();
-    } catch (e) {
-        console.log('Voice stop error:', e);
-    }
+    stopVoiceScrollAnimation();
+    stopSpeechRecognitionEngine();
+    stopVadVoice();
 
     if (!state.isPlaying) {
         stopElapsedTimer();
@@ -1882,9 +2298,7 @@ function stopVoice() {
         document.getElementById('teleprompter-view')?.classList.add('controls-visible');
     }
 
-    document.getElementById('voice-indicator')?.classList.add('hidden');
-    document.getElementById('voice-btn')?.classList.remove('active');
-    syncScrollModeUI();
+    hideVoiceIndicator();
 }
 
 // ============================================

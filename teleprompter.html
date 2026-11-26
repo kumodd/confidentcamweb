@@ -284,6 +284,25 @@
                     <p class="setting-hint" id="scroll-mode-hint">Scrolls continuously at set speed</p>
                 </div>
 
+                <div class="setting-group" id="voice-engine-group">
+                    <label class="setting-label" for="voice-engine">
+                        <span>Voice Engine</span>
+                    </label>
+                    <select id="voice-engine" class="voice-select">
+                        <option value="auto">Auto (Word Sync + Mic Fallback)</option>
+                        <option value="speech">Word Match (Chrome / Safari)</option>
+                        <option value="vad">Mic Voice Activity (Brave / Firefox)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group" id="voice-sensitivity-group">
+                    <label class="setting-label">
+                        <span>Mic Sensitivity</span>
+                        <span class="setting-value" id="voice-sensitivity-value">5</span>
+                    </label>
+                    <input type="range" id="voice-sensitivity" min="1" max="10" step="1" value="5">
+                </div>
+
                 <div class="setting-group" id="voice-lang-group">
                     <label class="setting-label" for="voice-lang">
                         <span>Voice Language</span>
@@ -420,6 +439,13 @@
         <div id="voice-indicator" class="voice-indicator hidden">
             <span class="voice-dot"></span>
             <span id="voice-status-text">Voice Sync (Auto-scroll off) • Listening...</span>
+            <div id="voice-meter" class="voice-meter hidden" aria-hidden="true">
+                <span class="voice-bar"></span>
+                <span class="voice-bar"></span>
+                <span class="voice-bar"></span>
+                <span class="voice-bar"></span>
+                <span class="voice-bar"></span>
+            </div>
             <span id="voice-heard-preview" class="voice-heard-preview"></span>
         </div>
     </div>
