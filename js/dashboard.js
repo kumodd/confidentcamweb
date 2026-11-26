@@ -95,13 +95,38 @@ function setupHowToUse() {
 
 async function loadScripts() {
     const userId = currentUser.id;
-    const result = await scriptsService.getScripts(userId);
+    const container = document.getElementById('recent-scripts');
+    const emptyState = document.getElementById('empty-state');
+
+    const result = await Promise.race([
+        scriptsService.getScripts(userId),
+        new Promise(resolve => setTimeout(() => resolve({
+            success: false,
+            error: 'Connection timed out while contacting backend (Supabase).'
+        }), 10000))
+    ]);
 
     if (result.success) {
         updateStats();
         renderRecentScripts();
     } else {
         console.error('Failed to load scripts:', result.error);
+        if (container) {
+            container.classList.remove('hidden');
+            emptyState?.classList.add('hidden');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Unable to connect to backend</h3>
+                    <p>${escapeHtml(result.error || 'Could not load scripts. Check your connection/VPN and try again.')}</p>
+                    <button type="button" class="btn btn-primary" id="retry-dashboard-scripts">Retry</button>
+                </div>
+            `;
+            document.getElementById('retry-dashboard-scripts')?.addEventListener('click', () => {
+                container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><p>Loading scripts...</p></div>`;
+                loadScripts();
+            });
+        }
     }
 }
 

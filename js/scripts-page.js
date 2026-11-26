@@ -99,13 +99,38 @@ function setupFilters() {
 // ============================================
 
 async function loadScripts() {
-    const result = await scriptsService.getScripts(currentUser.id);
+    const container = document.getElementById('scripts-container');
+    const emptyState = document.getElementById('empty-state');
+
+    const result = await Promise.race([
+        scriptsService.getScripts(currentUser.id),
+        new Promise(resolve => setTimeout(() => resolve({
+            success: false,
+            error: 'Connection timed out while contacting backend (Supabase).'
+        }), 10000))
+    ]);
 
     if (result.success) {
         renderScripts();
     } else {
         console.error('Failed to load scripts:', result.error);
-        showError('Failed to load scripts. Please try again.');
+        showToast('Failed to load scripts from backend', 'error');
+        if (container) {
+            container.classList.remove('hidden');
+            emptyState?.classList.add('hidden');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Unable to connect to backend</h3>
+                    <p>${escapeHtml(result.error || 'Could not load scripts. Check your connection/VPN and try again.')}</p>
+                    <button type="button" class="btn btn-primary" id="retry-load-scripts">Retry</button>
+                </div>
+            `;
+            document.getElementById('retry-load-scripts')?.addEventListener('click', () => {
+                container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><p>Loading scripts...</p></div>`;
+                loadScripts();
+            });
+        }
     }
 }
 

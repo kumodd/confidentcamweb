@@ -127,16 +127,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Setup selection UI
+    // Setup selection & teleprompter controls BEFORE awaiting network calls
+    // so Custom Text + Voice Sync work immediately even if backend times out
     setupUserInfo();
     setupLogout();
     setupCustomText();
     setupScriptSearch();
-
-    // Load scripts
-    await loadScripts();
-
-    // Setup teleprompter controls
     setupTeleprompterControls();
     setupSettings();
     setupKeyboardShortcuts();
@@ -148,7 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupPartNavigation();
     setupWakeLockLifecycle();
 
-    // Check if script ID in URL (after scripts & controls are ready)
+    // Load scripts & check URL params
+    await loadScripts();
     await checkUrlParams();
 });
 
@@ -228,11 +225,51 @@ function setupScriptSearch() {
 }
 
 async function loadScripts() {
-    const result = await scriptsService.getScripts(currentUser.id);
+    const container = document.getElementById('scripts-list');
+    const emptyState = document.getElementById('empty-state');
+
+    if (container && !container.querySelector('.script-select-card')) {
+        container.classList.remove('hidden');
+        emptyState?.classList.add('hidden');
+        container.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading scripts...</p>
+            </div>
+        `;
+    }
+
+    const result = await withTimeout(scriptsService.getScripts(currentUser.id), 10000);
 
     if (result.success) {
         renderScriptsList();
+    } else {
+        console.error('Failed to load scripts:', result.error);
+        if (container) {
+            container.classList.remove('hidden');
+            emptyState?.classList.add('hidden');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Unable to reach script library</h3>
+                    <p>${escapeHtml(result.error || 'Network connection timed out. Check your internet/VPN/ISP, or paste text above to use the teleprompter offline.')}</p>
+                    <button type="button" class="btn btn-primary" id="retry-scripts-btn">Retry</button>
+                </div>
+            `;
+            document.getElementById('retry-scripts-btn')?.addEventListener('click', loadScripts);
+        }
     }
+}
+
+/** Race a promise against a timeout so hung network calls recover cleanly */
+function withTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise(resolve => setTimeout(() => resolve({
+            success: false,
+            error: 'Connection timed out while contacting backend (Supabase).'
+        }), ms))
+    ]);
 }
 
 function renderScriptsList() {
