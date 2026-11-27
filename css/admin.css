@@ -5,6 +5,21 @@
    ============================================ */
 
 /* ============================================
+   PRE-AUTH VERIFICATION GATE
+   ============================================ */
+.admin-auth-gate {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
+}
+
+/* ============================================
    ADMIN LAYOUT
    ============================================ */
 .admin-layout {
@@ -23,7 +38,11 @@
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 50;
+    z-index: 60;
+}
+
+.admin-sidebar-backdrop {
+    display: none;
 }
 
 .admin-sidebar-header {
@@ -171,6 +190,14 @@
     margin-bottom: var(--space-xl);
 }
 
+.admin-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
 .admin-page-header h1 {
     font-size: 30px;
     margin-bottom: 4px;
@@ -179,6 +206,29 @@
 
 .admin-page-header p {
     color: var(--text-secondary);
+    margin: 0;
+}
+
+.categories-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-subsection {
+    margin-top: 32px;
+}
+
+.admin-subsection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.admin-subsection-header h2 {
     margin: 0;
 }
 
@@ -272,7 +322,7 @@
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    overflow: hidden;
+    overflow-x: auto;
     box-shadow: var(--shadow-sm);
 }
 
@@ -333,7 +383,7 @@
 }
 
 .value-masked {
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-family: monospace;
 }
 
@@ -366,6 +416,28 @@
 .admin-badge strong {
     color: var(--text-primary);
     margin-left: 4px;
+}
+
+.guide-badge-markdown {
+    background: var(--bg-nav-active);
+    color: var(--brand-primary);
+    border-color: var(--border-pill);
+}
+
+.guide-badge-youtube {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: rgba(181, 61, 50, 0.25);
+}
+
+.guide-color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 6px;
+    border: 1px solid var(--border-color);
 }
 
 /* ============================================
@@ -432,7 +504,7 @@
 }
 
 /* ============================================
-   PROMPT CARDS
+   PROMPT & CMS CARDS
    ============================================ */
 .prompts-grid {
     display: flex;
@@ -463,12 +535,14 @@
     align-items: flex-start;
     gap: 12px;
     margin-bottom: var(--space-md);
+    flex-wrap: wrap;
 }
 
 .prompt-card-header > div {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    flex-wrap: wrap;
 }
 
 .prompt-key {
@@ -569,10 +643,24 @@
 }
 
 /* ============================================
-   ADMIN MODAL (extends base modal)
+   ADMIN MODAL & RESPONSIVE FORM GRIDS
    ============================================ */
 .admin-modal .modal {
     max-width: 640px;
+}
+
+.admin-modal .modal.modal-medium {
+    max-width: 700px;
+}
+
+.admin-modal .modal.modal-wide {
+    max-width: 800px;
+}
+
+.admin-modal .modal-close {
+    background: transparent;
+    border: none;
+    line-height: 1;
 }
 
 .admin-modal .form-textarea {
@@ -580,6 +668,86 @@
     font-family: monospace;
     font-size: var(--font-size-sm);
     line-height: 1.5;
+}
+
+.modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-section-heading {
+    margin-top: 16px;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.label-note {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.emoji-input {
+    font-size: 24px;
+    text-align: center;
+}
+
+.color-picker-input {
+    height: 44px;
+    padding: 4px;
+}
+
+.sort-input {
+    width: 100px;
+}
+
+.modal-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.modal-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.modal-grid-emoji {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 16px;
+}
+
+.modal-grid-name-stars {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 16px;
+}
+
+.modal-grid-role-init-sort {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 84px;
+    gap: 16px;
+}
+
+.modal-checkbox-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.modal-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
 }
 
 /* ============================================
@@ -690,6 +858,72 @@
     font-size: var(--font-size-sm);
 }
 
+/* Ensure >= 4.5:1 WCAG AA contrast on placeholders & back link */
+.admin-login-page .form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
+/* Ensure spinner is crisp white inside solid olive primary button */
+.btn-primary .btn-loader.loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-width: 2.5px;
+    border-color: rgba(249, 250, 245, 0.32);
+    border-top-color: var(--brand-text-on-primary);
+}
+
+.password-input-wrap {
+    position: relative;
+}
+
+.password-input-wrap .form-input {
+    padding-right: 46px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.password-toggle-btn:hover {
+    background: var(--bg-card);
+}
+
+.admin-login-footer {
+    text-align: center;
+    margin-top: var(--space-md);
+}
+
+.admin-back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.admin-back-link:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
 /* ============================================
    RESPONSIVE
    ============================================ */
@@ -731,17 +965,34 @@
         z-index: 60;
         box-shadow: var(--shadow-lg);
     }
+
     .admin-sidebar.open {
         transform: translateX(0);
     }
+
+    .admin-sidebar-backdrop.open {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        background: rgba(27, 29, 23, 0.42);
+        backdrop-filter: blur(2px);
+    }
+
     .admin-main {
         margin-left: 0;
         padding: var(--space-md);
     }
-    .admin-table-wrapper {
-        overflow-x: auto;
-    }
+
     .admin-login-card {
         padding: var(--space-xl);
+    }
+
+    .modal-grid-2,
+    .modal-grid-3,
+    .modal-grid-emoji,
+    .modal-grid-name-stars,
+    .modal-grid-role-init-sort {
+        grid-template-columns: 1fr;
     }
 }

@@ -7,6 +7,9 @@
     <title>Admin Dashboard | Confident Creator</title>
     <meta name="robots" content="noindex, nofollow">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%234E592B'/><circle cx='50' cy='50' r='22' fill='none' stroke='%23F6F7F0' stroke-width='7'/><circle cx='50' cy='50' r='9' fill='%23F6F7F0'/></svg>">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,61 +24,70 @@
 </head>
 
 <body>
-    <div class="admin-layout">
+    <!-- Neutral pre-auth verification gate (prevents flashing admin UI before redirect) -->
+    <div id="admin-auth-gate" class="admin-auth-gate" role="status" aria-live="polite">
+        <div class="loading-spinner loading-spinner-lg"></div>
+        <p>Verifying admin session...</p>
+    </div>
+
+    <div class="admin-layout hidden" id="admin-layout">
         <!-- Mobile Top Bar -->
         <div class="admin-mobile-bar">
             <span>⚙️ Admin Panel</span>
-            <button type="button" class="btn btn-secondary btn-sm" id="admin-menu-toggle">☰ Menu</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="admin-menu-toggle" aria-label="Toggle Menu" aria-expanded="false">☰ Menu</button>
         </div>
+
+        <!-- Mobile Sidebar Backdrop -->
+        <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop"></div>
 
         <!-- ============================================
              SIDEBAR
              ============================================ -->
         <aside class="admin-sidebar" id="admin-sidebar">
             <div class="admin-sidebar-header">
-                <div class="admin-logo">⚙️</div>
+                <div class="admin-logo" aria-hidden="true">⚙️</div>
                 <div>
                     <h2>Admin Panel</h2>
                     <p class="admin-subtitle">Configuration</p>
                 </div>
             </div>
 
-            <nav class="admin-nav">
-                <button class="admin-nav-item active" data-tab="overview">
-                    <span class="nav-icon">📊</span>
+            <nav class="admin-nav" aria-label="Admin Navigation">
+                <button type="button" class="admin-nav-item active" data-tab="overview">
+                    <span class="nav-icon" aria-hidden="true">📊</span>
                     <span>Overview</span>
                 </button>
-                <button class="admin-nav-item" data-tab="app-config">
-                    <span class="nav-icon">⚙️</span>
+                <button type="button" class="admin-nav-item" data-tab="app-config">
+                    <span class="nav-icon" aria-hidden="true">⚙️</span>
                     <span>App Config</span>
                 </button>
-                <button class="admin-nav-item" data-tab="prompts">
-                    <span class="nav-icon">💬</span>
+                <button type="button" class="admin-nav-item" data-tab="prompts">
+                    <span class="nav-icon" aria-hidden="true">💬</span>
                     <span>Prompts</span>
                 </button>
-                <button class="admin-nav-item" data-tab="flags">
-                    <span class="nav-icon">🚩</span>
+                <button type="button" class="admin-nav-item" data-tab="flags">
+                    <span class="nav-icon" aria-hidden="true">🚩</span>
                     <span>Feature Flags</span>
                 </button>
-                <button class="admin-nav-item" data-tab="landing">
-                    <span class="nav-icon">🏠</span>
+                <button type="button" class="admin-nav-item" data-tab="landing">
+                    <span class="nav-icon" aria-hidden="true">🏠</span>
                     <span>Landing Page</span>
                 </button>
-                <button class="admin-nav-item" data-tab="guides">
-                    <span class="nav-icon">📖</span>
+                <button type="button" class="admin-nav-item" data-tab="guides">
+                    <span class="nav-icon" aria-hidden="true">📖</span>
                     <span>Creator's Guide</span>
                 </button>
             </nav>
 
             <div class="admin-sidebar-footer">
                 <div class="admin-user-info">
-                    <div class="user-avatar">A</div>
+                    <div class="user-avatar" id="admin-avatar">A</div>
                     <div class="user-details">
                         <span class="user-email" id="admin-email">admin</span>
                         <span class="user-role" id="admin-role">admin</span>
                     </div>
                 </div>
-                <button class="btn btn-ghost btn-sm btn-full" id="admin-logout">
+                <button type="button" class="btn btn-ghost btn-sm btn-full" id="admin-logout">
                     🚪 Sign Out
                 </button>
             </div>
@@ -112,7 +124,7 @@
                     <div class="card-header">
                         <h3 class="card-title">Config Categories</h3>
                     </div>
-                    <div id="config-categories" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <div id="config-categories" class="categories-wrap">
                         <span class="text-muted">Loading...</span>
                     </div>
                 </div>
@@ -120,12 +132,12 @@
 
             <!-- ── APP CONFIG TAB ── -->
             <div class="admin-tab-content" id="tab-app-config">
-                <div class="admin-page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="admin-page-header admin-header-row">
                     <div>
                         <h1>App Config</h1>
                         <p>Key-value settings for the entire application</p>
                     </div>
-                    <button class="btn btn-primary" onclick="dashboard.showAddConfigModal()">
+                    <button type="button" class="btn btn-primary" id="add-config-btn">
                         ➕ Add Config
                     </button>
                 </div>
@@ -157,9 +169,14 @@
 
             <!-- ── PROMPTS TAB ── -->
             <div class="admin-tab-content" id="tab-prompts">
-                <div class="admin-page-header">
-                    <h1>Prompt Templates</h1>
-                    <p>AI prompt templates used for script generation</p>
+                <div class="admin-page-header admin-header-row">
+                    <div>
+                        <h1>Prompt Templates</h1>
+                        <p>AI prompt templates used for script generation</p>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="add-prompt-btn">
+                        ➕ Add Prompt
+                    </button>
                 </div>
 
                 <div class="prompts-grid" id="prompts-container">
@@ -192,10 +209,10 @@
                 </div>
 
                 <!-- Features -->
-                <div style="margin-top: 32px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div class="admin-subsection">
+                    <div class="admin-subsection-header">
                         <h2>Feature Cards</h2>
-                        <button class="btn btn-primary btn-sm" onclick="dashboard.showAddFeatureModal()">➕ Add Feature</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="add-feature-btn">➕ Add Feature</button>
                     </div>
                     <div class="prompts-grid" id="landing-features-container">
                         <p class="text-muted">Loading...</p>
@@ -203,10 +220,10 @@
                 </div>
 
                 <!-- Testimonials -->
-                <div style="margin-top: 32px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div class="admin-subsection">
+                    <div class="admin-subsection-header">
                         <h2>Testimonials</h2>
-                        <button class="btn btn-primary btn-sm" onclick="dashboard.showAddTestimonialModal()">➕ Add Testimonial</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="add-testimonial-btn">➕ Add Testimonial</button>
                     </div>
                     <div class="prompts-grid" id="landing-testimonials-container">
                         <p class="text-muted">Loading...</p>
@@ -216,12 +233,12 @@
 
             <!-- ── CREATOR'S GUIDE TAB ── -->
             <div class="admin-tab-content" id="tab-guides">
-                <div class="admin-page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="admin-page-header admin-header-row">
                     <div>
                         <h1>📖 Creator's Guide</h1>
                         <p>Manage guide chapters shown in the mobile app dashboard</p>
                     </div>
-                    <button class="btn btn-primary" onclick="dashboard.showAddGuideModal()">➕ Add Chapter</button>
+                    <button type="button" class="btn btn-primary" id="add-guide-btn">➕ Add Chapter</button>
                 </div>
 
                 <div class="prompts-grid" id="admin-guides-container">
@@ -235,11 +252,11 @@
     <!-- ============================================
          CONFIG EDIT MODAL
          ============================================ -->
-    <div id="config-edit-modal" class="modal-backdrop admin-modal">
+    <div id="config-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="config-modal-title">
         <div class="modal">
             <div class="modal-header">
                 <h3 class="modal-title" id="config-modal-title">Edit Config</h3>
-                <span class="modal-close" onclick="dashboard._hideModal('config-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="config-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -251,7 +268,7 @@
                     <textarea id="edit-config-value" class="form-input form-textarea" rows="3"
                         placeholder="Config value"></textarea>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="modal-grid-2">
                     <div class="form-group">
                         <label class="form-label" for="edit-config-type">Type</label>
                         <select id="edit-config-type" class="form-input">
@@ -275,8 +292,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('config-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.saveConfigRow()">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="config-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-config-btn">Save</button>
             </div>
         </div>
     </div>
@@ -284,19 +301,19 @@
     <!-- ============================================
          PROMPT EDIT MODAL
          ============================================ -->
-    <div id="prompt-edit-modal" class="modal-backdrop admin-modal">
-        <div class="modal" style="max-width: 800px;">
+    <div id="prompt-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="prompt-modal-title">
+        <div class="modal modal-wide">
             <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="modal-title-group">
                     <h3 class="modal-title" id="prompt-modal-title">Edit Prompt</h3>
                     <span class="admin-badge" id="edit-prompt-version">v1</span>
                 </div>
-                <span class="modal-close" onclick="dashboard._hideModal('prompt-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="prompt-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label" for="edit-prompt-key">Prompt Key</label>
-                    <input type="text" id="edit-prompt-key" class="form-input" disabled>
+                    <input type="text" id="edit-prompt-key" class="form-input" placeholder="my_prompt_key" disabled>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="edit-prompt-system">System Prompt</label>
@@ -311,8 +328,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('prompt-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.savePrompt()">Save & Bump Version</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="prompt-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-prompt-btn">Save & Bump Version</button>
             </div>
         </div>
     </div>
@@ -320,125 +337,113 @@
     <!-- ============================================
          GUIDE EDIT MODAL
          ============================================ -->
-    <div id="guide-edit-modal" class="modal-backdrop admin-modal">
-        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+    <div id="guide-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
+        <div class="modal modal-medium">
             <div class="modal-header">
                 <h3 class="modal-title" id="guide-modal-title">Edit Guide Chapter</h3>
-                <span class="modal-close" onclick="dashboard._hideModal('guide-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="guide-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-guide-id">
-                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 16px;">
+                <div class="modal-grid-emoji">
                     <div class="form-group">
-                        <label class="form-label">Emoji</label>
-                        <input type="text" id="edit-guide-emoji" class="form-input" style="font-size: 24px; text-align: center;" placeholder="💪">
+                        <label class="form-label" for="edit-guide-emoji">Emoji</label>
+                        <input type="text" id="edit-guide-emoji" class="form-input emoji-input" placeholder="💪">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Title</label>
+                        <label class="form-label" for="edit-guide-title">Title</label>
                         <input type="text" id="edit-guide-title" class="form-input" placeholder="Overcoming Fear">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Guide Key</label>
+                    <label class="form-label" for="edit-guide-key">Guide Key</label>
                     <input type="text" id="edit-guide-key" class="form-input" placeholder="overcoming_fear (auto-generated)">
                     <span class="form-hint">Unique identifier. Auto-generated from title for new guides.</span>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Summary</label>
+                    <label class="form-label" for="edit-guide-summary">Summary</label>
                     <input type="text" id="edit-guide-summary" class="form-input" placeholder="Short description shown in collapsed state">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">📝 Markdown Body <span style="color: var(--text-muted); font-weight: normal;">(primary content)</span></label>
-                    <textarea id="edit-guide-markdown" class="form-input form-textarea" rows="12" placeholder="## Why You Feel Fear
-
-Fear of judgment is **completely normal**. Every successful creator started with shaky hands.
-
-> &quot;Courage is not the absence of fear, but action in spite of fear.&quot;
-
-### The First 10 Videos Rule
-
-1. **Videos 1–3:** You'll hate your voice. Normal.
-2. **Videos 4–6:** You start finding your rhythm.
-
-### Practical Tips
-
-- Focus on **progress, not perfection**
-- Start by recording without posting
-- The discomfort means you're growing"></textarea>
-                    <span class="form-hint">Full markdown: ## headers, **bold**, - lists, > quotes, 1. numbered lists</span>
+                    <label class="form-label" for="edit-guide-content">Bullet Points</label>
+                    <textarea id="edit-guide-content" class="form-input form-textarea" rows="6" placeholder="One bullet point per line"></textarea>
+                    <span class="form-hint">Each line is saved as one chapter bullet point in the guides table.</span>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Legacy Bullets <span style="color: var(--text-muted); font-weight: normal;">(fallback for old app versions)</span></label>
-                    <textarea id="edit-guide-content" class="form-input form-textarea" rows="4" placeholder="One bullet point per line (optional — auto-generated from markdown)"></textarea>
-                    <span class="form-hint">Each line = one bullet point. Leave blank to auto-generate from markdown.</span>
+                <div class="form-group" id="edit-guide-markdown-group">
+                    <label class="form-label" for="edit-guide-markdown">Markdown Body <span class="label-note">(optional schema extension)</span></label>
+                    <textarea id="edit-guide-markdown" class="form-input form-textarea" rows="8" placeholder="## Why You Feel Fear&#10;&#10;- Focus on progress, not perfection"></textarea>
                 </div>
-                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Appearance</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label class="form-label">Cover Color</label>
-                        <input type="color" id="edit-guide-cover-color" class="form-input" value="#FBBF24" style="height: 44px; padding: 4px;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Read Time (min)</label>
-                        <input type="number" id="edit-guide-read-min" class="form-input" value="3" min="1" max="30">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Sort Order</label>
-                        <input type="number" id="edit-guide-sort" class="form-input" value="1">
+                <div id="guide-appearance-group">
+                    <h4 class="modal-section-heading">Appearance &amp; Order</h4>
+                    <div class="modal-grid-3">
+                        <div class="form-group" id="guide-cover-color-group">
+                            <label class="form-label" for="edit-guide-cover-color">Cover Color</label>
+                            <input type="color" id="edit-guide-cover-color" class="form-input color-picker-input" value="#4E592B">
+                        </div>
+                        <div class="form-group" id="guide-read-min-group">
+                            <label class="form-label" for="edit-guide-read-min">Read Time (min)</label>
+                            <input type="number" id="edit-guide-read-min" class="form-input" value="3" min="1" max="30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="edit-guide-sort">Sort Order</label>
+                            <input type="number" id="edit-guide-sort" class="form-input" value="1">
+                        </div>
                     </div>
                 </div>
-                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">YouTube Video (Optional)</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <h4 class="modal-section-heading">YouTube Video (Optional)</h4>
+                <div class="modal-grid-2">
                     <div class="form-group">
-                        <label class="form-label">YouTube URL</label>
+                        <label class="form-label" for="edit-guide-youtube-url">YouTube URL</label>
                         <input type="url" id="edit-guide-youtube-url" class="form-input" placeholder="https://youtube.com/watch?v=...">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">YouTube Title</label>
+                        <label class="form-label" for="edit-guide-youtube-title">YouTube Title</label>
                         <input type="text" id="edit-guide-youtube-title" class="form-input" placeholder="Video title">
                     </div>
                 </div>
-                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Action Button (Optional)</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <h4 class="modal-section-heading">Action Button (Optional)</h4>
+                <div class="modal-grid-2">
                     <div class="form-group">
-                        <label class="form-label">Action Route</label>
-                        <select id="edit-guide-action-route" class="form-input">
-                            <option value="">None</option>
-                            <option value="/warmup">Warmup (/warmup)</option>
-                            <option value="/challenge">Challenge (/challenge)</option>
-                        </select>
+                        <label class="form-label" for="edit-guide-action-route">Action Route</label>
+                        <input type="text" id="edit-guide-action-route" list="guide-action-routes" class="form-input" placeholder="/warmup or leave blank">
+                        <datalist id="guide-action-routes">
+                            <option value="/warmup">Warmup</option>
+                            <option value="/challenge">Challenge</option>
+                            <option value="/scripts">Scripts</option>
+                            <option value="/teleprompter">Teleprompter</option>
+                        </datalist>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Action Button Text</label>
+                        <label class="form-label" for="edit-guide-action-title">Action Button Text</label>
                         <input type="text" id="edit-guide-action-title" class="form-input" placeholder="Practice a Warmup">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('guide-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.saveGuide()">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="guide-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-guide-btn">Save</button>
             </div>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toast-container"></div>
+    <div id="toast-container" aria-live="polite"></div>
 
     <!-- ============================================
          LANDING SECTION EDIT MODAL
          ============================================ -->
-    <div id="section-edit-modal" class="modal-backdrop admin-modal">
-        <div class="modal" style="max-width: 700px;">
+    <div id="section-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="section-modal-title">
+        <div class="modal modal-medium">
             <div class="modal-header">
                 <h3 class="modal-title" id="section-modal-title">Edit Section</h3>
-                <span class="modal-close" onclick="dashboard._hideModal('section-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="section-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body" id="section-modal-fields">
                 <!-- Dynamically populated -->
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('section-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.saveLandingSection()">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="section-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-section-btn">Save</button>
             </div>
         </div>
     </div>
@@ -446,36 +451,36 @@ Fear of judgment is **completely normal**. Every successful creator started with
     <!-- ============================================
          LANDING FEATURE EDIT MODAL
          ============================================ -->
-    <div id="feature-edit-modal" class="modal-backdrop admin-modal">
+    <div id="feature-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="feature-modal-title">
         <div class="modal">
             <div class="modal-header">
                 <h3 class="modal-title" id="feature-modal-title">Edit Feature</h3>
-                <span class="modal-close" onclick="dashboard._hideModal('feature-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="feature-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-feature-id">
-                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 16px;">
+                <div class="modal-grid-emoji">
                     <div class="form-group">
-                        <label class="form-label">Icon</label>
-                        <input type="text" id="edit-feature-icon" class="form-input" style="font-size: 24px; text-align: center;" placeholder="⭐">
+                        <label class="form-label" for="edit-feature-icon">Icon</label>
+                        <input type="text" id="edit-feature-icon" class="form-input emoji-input" placeholder="⭐">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Title</label>
+                        <label class="form-label" for="edit-feature-title">Title</label>
                         <input type="text" id="edit-feature-title" class="form-input" placeholder="Feature title">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
+                    <label class="form-label" for="edit-feature-desc">Description</label>
                     <textarea id="edit-feature-desc" class="form-input form-textarea" rows="3" placeholder="Feature description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Sort Order</label>
-                    <input type="number" id="edit-feature-sort" class="form-input" value="0" style="width: 100px;">
+                    <label class="form-label" for="edit-feature-sort">Sort Order</label>
+                    <input type="number" id="edit-feature-sort" class="form-input sort-input" value="0">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('feature-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.saveLandingFeature()">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="feature-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-feature-btn">Save</button>
             </div>
         </div>
     </div>
@@ -483,25 +488,25 @@ Fear of judgment is **completely normal**. Every successful creator started with
     <!-- ============================================
          TESTIMONIAL EDIT MODAL
          ============================================ -->
-    <div id="testimonial-edit-modal" class="modal-backdrop admin-modal">
-        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+    <div id="testimonial-edit-modal" class="modal-backdrop admin-modal" role="dialog" aria-modal="true" aria-labelledby="testimonial-modal-title">
+        <div class="modal modal-medium">
             <div class="modal-header">
                 <h3 class="modal-title" id="testimonial-modal-title">Edit Testimonial</h3>
-                <span class="modal-close" onclick="dashboard._hideModal('testimonial-edit-modal')">&times;</span>
+                <button type="button" class="modal-close" data-close-modal="testimonial-edit-modal" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-testimonial-id">
                 <div class="form-group">
-                    <label class="form-label">Quote</label>
+                    <label class="form-label" for="edit-testimonial-quote">Quote</label>
                     <textarea id="edit-testimonial-quote" class="form-input form-textarea" rows="4" placeholder="What they said..."></textarea>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 80px; gap: 16px;">
+                <div class="modal-grid-name-stars">
                     <div class="form-group">
-                        <label class="form-label">Author Name</label>
+                        <label class="form-label" for="edit-testimonial-name">Author Name</label>
                         <input type="text" id="edit-testimonial-name" class="form-input" placeholder="Sarah Jenkins">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Stars</label>
+                        <label class="form-label" for="edit-testimonial-stars">Stars</label>
                         <select id="edit-testimonial-stars" class="form-input">
                             <option value="5">5 ★</option>
                             <option value="4">4 ★</option>
@@ -509,49 +514,49 @@ Fear of judgment is **completely normal**. Every successful creator started with
                         </select>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 60px; gap: 16px;">
+                <div class="modal-grid-role-init-sort">
                     <div class="form-group">
-                        <label class="form-label">Role</label>
+                        <label class="form-label" for="edit-testimonial-role">Role</label>
                         <input type="text" id="edit-testimonial-role" class="form-input" placeholder="Startup Founder">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Initial</label>
+                        <label class="form-label" for="edit-testimonial-initial">Initial</label>
                         <input type="text" id="edit-testimonial-initial" class="form-input" maxlength="2" placeholder="S">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Sort</label>
+                        <label class="form-label" for="edit-testimonial-sort">Sort</label>
                         <input type="number" id="edit-testimonial-sort" class="form-input" value="0">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Profile Image URL</label>
+                    <label class="form-label" for="edit-testimonial-image">Profile Image URL</label>
                     <input type="url" id="edit-testimonial-image" class="form-input" placeholder="https://...">
                 </div>
-                <h4 style="margin-top: 16px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Social Profiles</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group"><label class="form-label">📸 Instagram URL</label><input type="url" id="edit-testimonial-ig-url" class="form-input" placeholder="https://instagram.com/..."></div>
-                    <div class="form-group"><label class="form-label">Instagram Handle</label><input type="text" id="edit-testimonial-ig-handle" class="form-input" placeholder="@handle"></div>
-                    <div class="form-group"><label class="form-label">▶️ YouTube URL</label><input type="url" id="edit-testimonial-yt-url" class="form-input" placeholder="https://youtube.com/..."></div>
-                    <div class="form-group"><label class="form-label">YouTube Channel</label><input type="text" id="edit-testimonial-yt-channel" class="form-input" placeholder="Channel Name"></div>
-                    <div class="form-group"><label class="form-label">𝕏 Twitter/X URL</label><input type="url" id="edit-testimonial-tw-url" class="form-input" placeholder="https://x.com/..."></div>
-                    <div class="form-group"><label class="form-label">Twitter Handle</label><input type="text" id="edit-testimonial-tw-handle" class="form-input" placeholder="@handle"></div>
-                    <div class="form-group"><label class="form-label">🎵 TikTok URL</label><input type="url" id="edit-testimonial-tt-url" class="form-input" placeholder="https://tiktok.com/..."></div>
-                    <div class="form-group"><label class="form-label">TikTok Handle</label><input type="text" id="edit-testimonial-tt-handle" class="form-input" placeholder="@handle"></div>
-                    <div class="form-group"><label class="form-label">💼 LinkedIn URL</label><input type="url" id="edit-testimonial-li-url" class="form-input" placeholder="https://linkedin.com/in/..."></div>
-                    <div class="form-group"><label class="form-label">🌐 Website URL</label><input type="url" id="edit-testimonial-web-url" class="form-input" placeholder="https://..."></div>
+                <h4 class="modal-section-heading">Social Profiles</h4>
+                <div class="modal-grid-2">
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-ig-url">📸 Instagram URL</label><input type="url" id="edit-testimonial-ig-url" class="form-input" placeholder="https://instagram.com/..."></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-ig-handle">Instagram Handle</label><input type="text" id="edit-testimonial-ig-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-yt-url">▶️ YouTube URL</label><input type="url" id="edit-testimonial-yt-url" class="form-input" placeholder="https://youtube.com/..."></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-yt-channel">YouTube Channel</label><input type="text" id="edit-testimonial-yt-channel" class="form-input" placeholder="Channel Name"></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-tw-url">𝕏 Twitter/X URL</label><input type="url" id="edit-testimonial-tw-url" class="form-input" placeholder="https://x.com/..."></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-tw-handle">Twitter Handle</label><input type="text" id="edit-testimonial-tw-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-tt-url">🎵 TikTok URL</label><input type="url" id="edit-testimonial-tt-url" class="form-input" placeholder="https://tiktok.com/..."></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-tt-handle">TikTok Handle</label><input type="text" id="edit-testimonial-tt-handle" class="form-input" placeholder="@handle"></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-li-url">💼 LinkedIn URL</label><input type="url" id="edit-testimonial-li-url" class="form-input" placeholder="https://linkedin.com/in/..."></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-web-url">🌐 Website URL</label><input type="url" id="edit-testimonial-web-url" class="form-input" placeholder="https://..."></div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group"><label class="form-label">Follower Count</label><input type="text" id="edit-testimonial-followers" class="form-input" placeholder="32k"></div>
-                    <div class="form-group"><label class="form-label">Follower Platform</label><input type="text" id="edit-testimonial-follower-platform" class="form-input" placeholder="Instagram"></div>
+                <div class="modal-grid-2">
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-followers">Follower Count</label><input type="text" id="edit-testimonial-followers" class="form-input" placeholder="32k"></div>
+                    <div class="form-group"><label class="form-label" for="edit-testimonial-follower-platform">Follower Platform</label><input type="text" id="edit-testimonial-follower-platform" class="form-input" placeholder="Instagram"></div>
                 </div>
-                <div style="display: flex; gap: 24px; margin-top: 8px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="edit-testimonial-verified"> Verified</label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="edit-testimonial-featured"> Featured</label>
+                <div class="modal-checkbox-row">
+                    <label class="modal-checkbox-label"><input type="checkbox" id="edit-testimonial-verified"> Verified</label>
+                    <label class="modal-checkbox-label"><input type="checkbox" id="edit-testimonial-featured"> Featured</label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="dashboard._hideModal('testimonial-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" onclick="dashboard.saveLandingTestimonial()">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-modal="testimonial-edit-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-testimonial-btn">Save</button>
             </div>
         </div>
     </div>
@@ -563,23 +568,37 @@ Fear of judgment is **completely normal**. Every successful creator started with
     <script src="../js/admin-dashboard.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const menuToggle = document.getElementById('admin-menu-toggle');
-            const sidebar = document.getElementById('admin-sidebar');
-            if (menuToggle && sidebar) {
-                menuToggle.addEventListener('click', () => {
-                    sidebar.classList.toggle('open');
-                });
-                sidebar.querySelectorAll('.admin-nav-item').forEach(btn => {
-                    btn.addEventListener('click', () => sidebar.classList.remove('open'));
-                });
-            }
-
             initSupabase();
             adminAuth.init();
 
-            // Auth guard — redirect if not admin
+            // Auth guard — redirect before revealing admin layout
             const isAdmin = await adminAuth.requireAdmin();
             if (!isAdmin) return;
+
+            document.getElementById('admin-auth-gate')?.remove();
+            document.getElementById('admin-layout')?.classList.remove('hidden');
+
+            const menuToggle = document.getElementById('admin-menu-toggle');
+            const sidebar = document.getElementById('admin-sidebar');
+            const backdrop = document.getElementById('admin-sidebar-backdrop');
+            const closeMenu = () => {
+                sidebar?.classList.remove('open');
+                backdrop?.classList.remove('open');
+                menuToggle?.setAttribute('aria-expanded', 'false');
+            };
+
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    const willOpen = !sidebar.classList.contains('open');
+                    sidebar.classList.toggle('open', willOpen);
+                    backdrop?.classList.toggle('open', willOpen);
+                    menuToggle.setAttribute('aria-expanded', String(willOpen));
+                });
+                backdrop?.addEventListener('click', closeMenu);
+                sidebar.querySelectorAll('.admin-nav-item').forEach(btn => {
+                    btn.addEventListener('click', closeMenu);
+                });
+            }
 
             // Initialize dashboard
             await dashboard.init();
